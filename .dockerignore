@@ -1,0 +1,8 @@
+node_modules
+.next
+.git
+tests
+.env*
+.kiro
+*.md
+!README.md

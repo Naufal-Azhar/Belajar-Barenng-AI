@@ -1,0 +1,99 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@layer base {
+  body {
+    @apply bg-canvas text-body antialiased font-sans;
+  }
+
+  h1, h2, h3 {
+    @apply font-serif text-ink;
+  }
+}
+
+@layer components {
+  /* Primary CTA — Coral */
+  .btn-primary {
+    @apply rounded-md bg-primary px-5 py-3 text-button font-sans font-medium text-on-primary 
+           transition-all duration-200 hover:bg-primary-active active:bg-primary-active active:scale-[0.97]
+           disabled:bg-primary-disabled disabled:text-muted disabled:cursor-not-allowed;
+  }
+
+  /* Secondary — Cream with hairline */
+  .btn-secondary {
+    @apply rounded-md border border-hairline bg-canvas px-5 py-3 text-button font-sans 
+           font-medium text-ink transition-all duration-200 hover:bg-surface-soft active:bg-surface-soft active:scale-[0.97];
+  }
+
+  /* Secondary on dark */
+  .btn-secondary-dark {
+    @apply rounded-md bg-surface-dark-elevated px-5 py-3 text-button font-sans 
+           font-medium text-on-dark transition-all duration-200 hover:bg-surface-dark-soft active:scale-[0.97];
+  }
+
+  /* Text link — coral inline */
+  .text-link {
+    @apply text-primary font-medium hover:underline transition-colors;
+  }
+
+  /* Cards */
+  .card {
+    @apply rounded-lg bg-surface-card p-xl-space transition-shadow duration-300;
+  }
+
+  .card-dark {
+    @apply rounded-lg bg-surface-dark p-xl-space text-on-dark;
+  }
+
+  .card-cream {
+    @apply rounded-lg bg-canvas border border-hairline p-xl-space transition-shadow duration-300;
+  }
+
+  /* Badge pill */
+  .badge {
+    @apply inline-flex items-center rounded-pill bg-surface-card px-3 py-1 
+           text-caption font-sans font-medium text-ink;
+  }
+
+  .badge-coral {
+    @apply inline-flex items-center rounded-pill bg-primary px-3 py-1 
+           text-caption-upper font-sans font-medium text-on-primary uppercase tracking-wider;
+  }
+
+  /* Category tab */
+  .tab {
+    @apply rounded-md px-3.5 py-2 text-nav-link font-sans font-medium text-muted 
+           transition-all duration-200 cursor-pointer;
+  }
+
+  .tab-active {
+    @apply rounded-md px-3.5 py-2 text-nav-link font-sans font-medium text-ink 
+           bg-surface-card cursor-pointer;
+  }
+
+  /* Input */
+  .input {
+    @apply rounded-md border border-hairline bg-canvas px-3.5 py-2.5 text-body-md font-sans 
+           text-ink placeholder:text-muted-soft
+           focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15
+           transition-all duration-200;
+  }
+
+  /* Callout coral card */
+  .callout-coral {
+    @apply rounded-lg bg-primary p-xxl text-on-primary;
+  }
+
+  /* Code window */
+  .code-window {
+    @apply rounded-lg bg-surface-dark p-lg-space font-mono text-code text-on-dark;
+  }
+
+  /* Section spacing */
+  .section-spacing {
+    @apply py-section;
+  }
+}
