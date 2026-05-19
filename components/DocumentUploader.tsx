@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
+import LoadingCat from './LoadingCat';
 
 const PDF_MIME = 'application/pdf';
 const DOCX_MIME =
@@ -103,11 +104,21 @@ export default function DocumentUploader({
             disabled={uploading}
             className="card-cream w-full text-center hover:border-primary/40 transition-colors disabled:opacity-60"
           >
-            <div className="text-4xl mb-2">{uploading ? '⏳' : '📎'}</div>
-            <p className="text-title-sm font-sans text-ink mb-1">
-              {uploading ? 'Memproses...' : 'Upload PDF atau DOCX'}
-            </p>
-            <p className="text-caption text-muted">Maks 10 MB · materi pelajaran</p>
+            {uploading ? (
+              <div className="flex flex-col items-center gap-2">
+                {/* EDIT CAPTION: PDF upload drop zone */}
+                <LoadingCat variant="inline" caption="Lagi baca dokumen kamu..." />
+                <p className="text-caption text-muted">Maks 10 MB · materi pelajaran</p>
+              </div>
+            ) : (
+              <>
+                <div className="text-4xl mb-2">📎</div>
+                <p className="text-title-sm font-sans text-ink mb-1">
+                  Upload PDF atau DOCX
+                </p>
+                <p className="text-caption text-muted">Maks 10 MB · materi pelajaran</p>
+              </>
+            )}
           </motion.button>
         )}
 
@@ -154,10 +165,8 @@ export default function DocumentUploader({
           className="flex items-center gap-1.5 rounded-md border border-hairline bg-canvas px-3 py-2 text-caption font-sans font-medium text-muted hover:bg-surface-soft transition-colors disabled:opacity-50"
         >
           {uploading ? (
-            <>
-              <span className="animate-spin">⏳</span>
-              <span>Uploading...</span>
-            </>
+            /* EDIT CAPTION: PDF upload submit button */
+            <LoadingCat variant="button" caption="Mengirim..." />
           ) : (
             <>
               <span>📎</span>

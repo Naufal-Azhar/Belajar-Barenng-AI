@@ -111,7 +111,7 @@ export default function KuisLayout(props: ModeLayoutProps) {
     );
   } else if (status === 'completed' || status === 'stopped') {
     leftColumn = (
-      <div className="flex h-full items-center justify-center px-4 py-8">
+      <div className="flex h-full items-center justify-center px-3 sm:px-4 py-6 sm:py-8">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
@@ -140,7 +140,7 @@ export default function KuisLayout(props: ModeLayoutProps) {
     // Running — tampilkan progress + soal aktif
     const progressPct = (answeredCount / config.count) * 100;
     leftColumn = (
-      <div className="flex flex-col h-full overflow-y-auto px-4 py-6">
+      <div className="flex flex-col h-full overflow-y-auto px-3 py-4 sm:px-4 sm:py-6">
         {/* Progress bar */}
         <div className="mb-4 max-w-2xl mx-auto w-full">
           <div className="flex justify-between text-caption font-sans text-muted mb-1">

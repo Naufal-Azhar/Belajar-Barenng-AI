@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import ThemeToggle from '@/components/ThemeToggle';
 
 export const metadata: Metadata = {
   title: 'BelajarBareng AI — Teman Belajar Personal',
@@ -7,14 +8,22 @@ export const metadata: Metadata = {
     'Nggak ada lagi alasan nggak ngerti. Tanya aja ke BelajarBareng AI.',
 };
 
+const themeScript = `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`;
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id">
-      <body className="min-h-screen font-sans bg-canvas">{children}</body>
+    <html lang="id" suppressHydrationWarning>
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeScript }} />
+      </head>
+      <body className="min-h-screen font-sans bg-canvas">
+        {children}
+        <ThemeToggle />
+      </body>
     </html>
   );
 }

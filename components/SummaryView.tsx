@@ -24,7 +24,7 @@ const item = {
 
 export default function SummaryView({ summary, onNewSession, onFinish }: Props) {
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-section bg-canvas">
+    <div className="flex min-h-screen flex-col items-center justify-center px-4 py-10 sm:py-section bg-canvas">
       <motion.div
         variants={container}
         initial="hidden"
@@ -32,7 +32,7 @@ export default function SummaryView({ summary, onNewSession, onFinish }: Props) 
         className="w-full max-w-lg"
       >
         <motion.div variants={item} className="mb-10 text-center">
-          <h1 className="font-serif text-display-md text-ink">Ringkasan Sesi</h1>
+          <h1 className="font-serif text-display-sm sm:text-display-md text-ink">Ringkasan Sesi</h1>
           <p className="mt-2 text-body-md text-muted">
             Berikut rangkuman dari sesi belajarmu
           </p>
@@ -80,7 +80,7 @@ export default function SummaryView({ summary, onNewSession, onFinish }: Props) 
           </ul>
         </motion.div>
 
-        <motion.div variants={item} className="flex gap-3">
+        <motion.div variants={item} className="flex flex-col sm:flex-row gap-3">
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}

@@ -8,6 +8,7 @@ import QuizComponent from './QuizComponent';
 import LatihanComponent from './LatihanComponent';
 import ExplainerComponent from './ExplainerComponent';
 import SocraticComponent from './SocraticComponent';
+import LoadingCat from './LoadingCat';
 
 interface Props {
   messages: Message[];
@@ -41,7 +42,7 @@ export default function ChatStream({
   }, [messages, isStreaming]);
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+    <div className="flex-1 overflow-y-auto px-3 py-4 sm:px-4 sm:py-6 space-y-4">
       {messages.length === 0 && (
         <div className="flex h-full items-center justify-center">
           <motion.div
@@ -50,16 +51,24 @@ export default function ChatStream({
             transition={{ duration: 0.6, ease: 'easeOut' }}
             className="text-center max-w-sm"
           >
-            {/* Spike mark */}
+            {/* Pixel fire mark */}
             <div className="mb-4 flex justify-center">
               <motion.div
                 animate={{ y: [0, -4, 0] }}
                 transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
               >
-                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" className="text-muted-soft">
-                  <path d="M12 2L12 22M2 12L22 12M4.93 4.93L19.07 19.07M19.07 4.93L4.93 19.07" 
-                        stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-                </svg>
+                <video
+                  src="/pixel-fire.webm"
+                  width={64}
+                  height={64}
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  aria-hidden="true"
+                  className="w-16 h-16 object-contain"
+                  style={{ imageRendering: 'pixelated' }}
+                />
               </motion.div>
             </div>
             <h2 className="font-serif text-display-sm text-ink mb-2">
@@ -122,24 +131,8 @@ export default function ChatStream({
 
       {isStreaming && (
         <div className="flex justify-start">
-          <div className="flex items-center gap-1.5 rounded-lg bg-surface-card border border-hairline px-4 py-3">
-            {[0, 1, 2].map((i) => (
-              <motion.span
-                key={i}
-                className="w-1.5 h-1.5 rounded-full bg-primary"
-                animate={{
-                  opacity: [0.4, 1, 0.4],
-                  scale: [0.8, 1.2, 0.8],
-                }}
-                transition={{
-                  duration: 1.2,
-                  repeat: Infinity,
-                  ease: 'easeInOut',
-                  delay: i * 0.15,
-                }}
-              />
-            ))}
-          </div>
+          {/* EDIT CAPTION: ChatStream typing indicator */}
+          <LoadingCat caption="Lagi mikir..." />
         </div>
       )}
 

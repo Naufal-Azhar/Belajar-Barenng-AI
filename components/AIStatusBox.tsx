@@ -1,6 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
+import LoadingCat from './LoadingCat';
 
 export type AIStatusBoxStatus =
   | 'idle'
@@ -38,6 +39,7 @@ function statusText({
     case 'idle':
       return 'Siap mulai kuis';
     case 'generating':
+      // EDIT CAPTION: Kuis streaming (text saat AI nyiapin soal — counter X/Y otomatis).
       if (currentIndex && total) return `Lagi nyusun soal ${currentIndex}/${total}...`;
       return 'Lagi nyusun soal...';
     case 'between':
@@ -93,14 +95,20 @@ export default function AIStatusBox({
       data-testid="ai-status-box"
     >
       <div className="flex flex-col items-center text-center">
-        <motion.div
-          animate={status === 'generating' ? { rotate: [0, 12, -12, 0] } : { rotate: 0 }}
-          transition={status === 'generating' ? { repeat: Infinity, duration: 1.6 } : { duration: 0.3 }}
-          className="text-5xl mb-3"
-          aria-hidden
-        >
-          {emoji}
-        </motion.div>
+        {status === 'generating' ? (
+          <div className="mb-3">
+            <LoadingCat variant="inline" caption="" />
+          </div>
+        ) : (
+          <motion.div
+            animate={{ rotate: 0 }}
+            transition={{ duration: 0.3 }}
+            className="text-5xl mb-3"
+            aria-hidden
+          >
+            {emoji}
+          </motion.div>
+        )}
         <p className="text-title-sm font-sans text-ink mb-1">AI Pemandu</p>
         <p className="text-body-sm text-body leading-snug">{text}</p>
       </div>
@@ -148,7 +156,11 @@ export function AIStatusBoxMobile({
       animate={{ y: 0, opacity: 1 }}
       className="sticky bottom-4 mx-4 flex md:hidden items-center gap-2 rounded-pill border border-hairline bg-surface-card px-3 py-2 shadow-subtle"
     >
-      <span className="text-xl" aria-hidden>{emoji}</span>
+      {status === 'generating' ? (
+        <LoadingCat variant="button" caption="" />
+      ) : (
+        <span className="text-xl" aria-hidden>{emoji}</span>
+      )}
       <span className="flex-1 truncate text-caption font-sans text-body">{text}</span>
       <button
         onClick={onSkip}

@@ -22,7 +22,7 @@ export default function ModeSelector({ currentMode, onChange }: Props) {
         <button
           key={mode.id}
           onClick={() => onChange(mode.id)}
-          className="relative flex-1 rounded-md px-3 py-2 text-nav-link font-sans transition-colors"
+          className="relative flex-1 rounded-md px-2 py-1.5 sm:px-3 sm:py-2 text-nav-link font-sans transition-colors"
         >
           {currentMode === mode.id && (
             <motion.div

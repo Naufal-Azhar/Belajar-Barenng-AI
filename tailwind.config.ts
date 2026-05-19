@@ -1,6 +1,7 @@
 import type { Config } from 'tailwindcss';
 
 const config: Config = {
+  darkMode: 'class',
   content: [
     './app/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',
@@ -12,36 +13,36 @@ const config: Config = {
         primary: {
           DEFAULT: '#cc785c',
           active: '#a9583e',
-          disabled: '#e6dfd8',
+          disabled: 'var(--color-primary-disabled)',
         },
         accent: {
           teal: '#5db8a6',
           amber: '#e8a55a',
         },
-        // Surfaces
-        canvas: '#faf9f5',
+        // Semantic surfaces (CSS variable driven)
+        canvas: 'var(--color-canvas)',
         surface: {
-          soft: '#f5f0e8',
-          card: '#efe9de',
-          'cream-strong': '#e8e0d2',
+          soft: 'var(--color-surface-soft)',
+          card: 'var(--color-surface-card)',
+          'cream-strong': 'var(--color-surface-cream-strong)',
           dark: '#181715',
           'dark-elevated': '#252320',
           'dark-soft': '#1f1e1b',
         },
         // Borders
         hairline: {
-          DEFAULT: '#e6dfd8',
-          soft: '#ebe6df',
+          DEFAULT: 'var(--color-hairline)',
+          soft: 'var(--color-hairline-soft)',
         },
         // Text
-        ink: '#141413',
+        ink: 'var(--color-ink)',
         body: {
-          DEFAULT: '#3d3d3a',
-          strong: '#252523',
+          DEFAULT: 'var(--color-body)',
+          strong: 'var(--color-body-strong)',
         },
         muted: {
-          DEFAULT: '#6c6a64',
-          soft: '#8e8b82',
+          DEFAULT: 'var(--color-muted)',
+          soft: 'var(--color-muted-soft)',
         },
         'on-primary': '#ffffff',
         'on-dark': '#faf9f5',

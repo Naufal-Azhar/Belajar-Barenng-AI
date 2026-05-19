@@ -4,6 +4,7 @@ import { useMemo, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import MessageBubble from '@/components/MessageBubble';
 import SocraticComponent from '@/components/SocraticComponent';
+import LoadingCat from '@/components/LoadingCat';
 import type { ModeLayoutProps } from './LayoutRouter';
 import type { Message, SocraticPayload } from '@/lib/types';
 
@@ -60,7 +61,7 @@ export default function SokratikLayout(props: ModeLayoutProps) {
     <div className="flex flex-1 min-h-0 md:flex-row flex-col">
       {/* Kolom kiri: chat + composer */}
       <section className="flex flex-1 min-w-0 flex-col">
-        <div className="flex-1 overflow-y-auto px-4 py-6 space-y-4">
+        <div className="flex-1 overflow-y-auto px-3 py-4 sm:px-4 sm:py-6 space-y-4">
           {messages.length === 0 && (
             <EmptySocraticHint />
           )}
@@ -96,7 +97,7 @@ export default function SokratikLayout(props: ModeLayoutProps) {
               }}
               placeholder="Aku rasa..."
               rows={2}
-              className="input flex-1 resize-none"
+              className="input flex-1 min-w-0 resize-none"
               disabled={isStreaming}
             />
             <button
@@ -238,13 +239,17 @@ function EmptySocraticHint() {
       className="card-cream max-w-md mx-auto text-center"
     >
       <div className="mb-3 flex justify-center">
-        <img
-          src="/writing.gif"
-          alt="Mode Sokratik"
+        <video
+          src="/writing-on-book.webm"
+          autoPlay
+          loop
+          muted
+          playsInline
+          aria-label="Mode Sokratik"
           draggable={false}
           onDragStart={(e) => e.preventDefault()}
-          style={{ imageRendering: 'auto', userSelect: 'none', pointerEvents: 'none' }}
-          className="block select-none"
+          style={{ userSelect: 'none', pointerEvents: 'none' }}
+          className="block select-none max-w-[200px] sm:max-w-none"
         />
       </div>
       <h3 className="font-serif text-title-lg text-ink mb-1">Mode Sokratik</h3>
@@ -259,16 +264,8 @@ function EmptySocraticHint() {
 function TypingIndicator() {
   return (
     <div className="flex justify-start">
-      <div className="flex items-center gap-1.5 rounded-lg bg-surface-card border border-hairline px-4 py-3">
-        {[0, 1, 2].map((i) => (
-          <motion.span
-            key={i}
-            className="w-1.5 h-1.5 rounded-full bg-primary"
-            animate={{ opacity: [0.4, 1, 0.4], scale: [0.8, 1.2, 0.8] }}
-            transition={{ duration: 1.2, repeat: Infinity, ease: 'easeInOut', delay: i * 0.15 }}
-          />
-        ))}
-      </div>
+      {/* EDIT CAPTION: Sokratik typing */}
+      <LoadingCat caption="Lagi nyusun pertanyaan..." />
     </div>
   );
 }

@@ -37,7 +37,7 @@ export default function LatihanLayout(props: ModeLayoutProps) {
   }, [messages]);
 
   return (
-    <div className="flex flex-1 min-h-0 overflow-y-auto md:overflow-hidden md:flex-row flex-col px-4 py-6 gap-6">
+    <div className="flex flex-1 min-h-0 overflow-y-auto md:overflow-hidden md:flex-row flex-col px-3 py-4 sm:px-4 sm:py-6 gap-6">
       {!activeLatihan ? (
         <EmptyLatihanHint onSend={onSend} isStreaming={isStreaming} />
       ) : (
@@ -77,6 +77,7 @@ function ActiveLatihan({
   );
   const [attempt, setAttempt] = useState('');
   const [hasAttempted, setHasAttempted] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Reset state ketika payload berubah (soal baru)
@@ -147,6 +148,14 @@ function ActiveLatihan({
             className="btn-primary w-full sm:w-auto"
           >
             {hasAttempted ? 'Cek Lagi' : 'Coba'}
+          </button>
+
+          {/* Mobile: toggle steps drawer */}
+          <button
+            onClick={() => setDrawerOpen(true)}
+            className="md:hidden mt-2 w-full rounded-md border border-hairline bg-canvas px-3 py-2 text-caption font-sans font-medium text-muted hover:text-ink transition-colors"
+          >
+            📋 Lihat Langkah ({revealed.filter(Boolean).length}/{totalSteps})
           </button>
         </div>
 
@@ -254,6 +263,62 @@ function ActiveLatihan({
           })}
         </div>
       </aside>
+
+      {/* Mobile drawer for steps */}
+      {drawerOpen && (
+        <motion.div
+          initial={{ y: '100%' }}
+          animate={{ y: 0 }}
+          exit={{ y: '100%' }}
+          className="fixed inset-x-0 bottom-0 z-50 md:hidden rounded-t-xl bg-canvas border-t border-hairline shadow-subtle p-4 max-h-[70vh] overflow-y-auto"
+        >
+          <div className="flex justify-between items-center mb-3">
+            <span className="text-caption-upper uppercase tracking-wider text-muted">
+              Langkah Penyelesaian ({revealedCount}/{totalSteps})
+            </span>
+            <button onClick={() => setDrawerOpen(false)} className="text-muted text-lg">✕</button>
+          </div>
+          <div className="h-1 w-full overflow-hidden rounded-pill bg-surface-soft mb-3">
+            <div className="h-full bg-accent-teal" style={{ width: `${progressPct}%` }} />
+          </div>
+          <div className="space-y-2">
+            {payload.steps.map((step, idx) => {
+              const stepLocked = !hasAttempted;
+              return (
+                <div
+                  key={idx}
+                  className={`rounded-md border p-3 ${
+                    revealed[idx] ? 'border-hairline bg-surface-card' : 'border-hairline-soft bg-surface-soft/50'
+                  }`}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <span className="flex items-center gap-2 text-title-sm font-sans text-ink">
+                      <span className="inline-flex h-5 w-5 items-center justify-center rounded-pill bg-accent-teal/15 text-caption font-medium text-accent-teal">
+                        {idx + 1}
+                      </span>
+                      <span className={revealed[idx] ? '' : 'text-muted'}>
+                        {revealed[idx] ? step.title : `Langkah ${idx + 1}`}
+                      </span>
+                    </span>
+                    {!revealed[idx] && (
+                      <button
+                        onClick={() => dispatchReveal({ type: 'REVEAL', index: idx })}
+                        disabled={stepLocked}
+                        className="rounded-md bg-canvas border border-hairline px-2 py-1 text-caption font-sans font-medium text-muted hover:text-ink hover:border-primary/30 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+                      >
+                        {stepLocked ? '🔒' : 'Tampilkan'}
+                      </button>
+                    )}
+                  </div>
+                  {revealed[idx] && (
+                    <p className="mt-2 text-body-sm text-body">{step.detail}</p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
     </>
   );
 }
@@ -272,7 +337,20 @@ function EmptyLatihanHint({
         animate={{ opacity: 1, y: 0 }}
         className="card-cream max-w-md text-center"
       >
-        <div className="text-3xl mb-2">🏋️</div>
+        <div className="mb-2 flex justify-center">
+          <video
+            src="/cat-movement.webm"
+            autoPlay
+            loop
+            muted
+            playsInline
+            aria-label="Mode Latihan"
+            draggable={false}
+            onDragStart={(e) => e.preventDefault()}
+            style={{ userSelect: 'none', pointerEvents: 'none' }}
+            className="block select-none max-w-[200px] sm:max-w-none"
+          />
+        </div>
         <h3 className="font-serif text-title-lg text-ink mb-1">Mode Latihan</h3>
         <p className="text-body-sm text-muted mb-4">
           Aku akan kasih soal langkah-demi-langkah. Coba dulu jawab,

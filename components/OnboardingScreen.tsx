@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { containerVariants, itemVariants } from '@/lib/animations';
 import type { ProfileType } from '@/lib/types';
+import LoadingCat from './LoadingCat';
 
 interface Props {
   onStart: (profileType: ProfileType) => Promise<void>;
@@ -67,14 +68,14 @@ export default function OnboardingScreen({ onStart }: Props) {
         {/* Headline */}
         <motion.h1
           variants={itemVariants}
-          className="font-serif text-display-lg text-ink mb-4 leading-tight"
+          className="font-serif text-display-sm sm:text-display-lg text-ink mb-4 leading-tight"
         >
           Belajar lebih<br />dalam, bareng AI.
         </motion.h1>
 
         <motion.p
           variants={itemVariants}
-          className="text-body-md text-body mb-10 max-w-sm"
+          className="text-body-md text-body mb-6 sm:mb-10 max-w-sm"
         >
           Teman belajar personal yang sabar, nggak pernah nge-judge,
           dan selalu siap bantu kamu paham.
@@ -91,7 +92,7 @@ export default function OnboardingScreen({ onStart }: Props) {
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.97 }}
               onClick={() => setSelected('sma')}
-              className={`rounded-lg p-xl-space text-left transition-all duration-200 border ${
+              className={`rounded-lg p-4 sm:p-xl-space text-left transition-all duration-200 border ${
                 selected === 'sma'
                   ? 'border-primary bg-canvas shadow-subtle'
                   : 'border-hairline bg-surface-card hover:border-hairline-soft'
@@ -106,7 +107,7 @@ export default function OnboardingScreen({ onStart }: Props) {
               whileHover={{ scale: 1.02, y: -2 }}
               whileTap={{ scale: 0.97 }}
               onClick={() => setSelected('mahasiswa')}
-              className={`rounded-lg p-xl-space text-left transition-all duration-200 border ${
+              className={`rounded-lg p-4 sm:p-xl-space text-left transition-all duration-200 border ${
                 selected === 'mahasiswa'
                   ? 'border-primary bg-canvas shadow-subtle'
                   : 'border-hairline bg-surface-card hover:border-hairline-soft'
@@ -136,25 +137,8 @@ export default function OnboardingScreen({ onStart }: Props) {
             whileTap={!loading && selected ? { scale: 0.97 } : {}}
           >
             {loading ? (
-              <span className="flex items-center justify-center gap-2">
-                <svg className="animate-spin h-4 w-4" viewBox="0 0 24 24">
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                    fill="none"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                  />
-                </svg>
-                Memulai...
-              </span>
+              /* EDIT CAPTION: Onboarding start button */
+              <LoadingCat variant="button" caption="Lagi nyiapin sesi..." />
             ) : (
               'Mulai Belajar →'
             )}

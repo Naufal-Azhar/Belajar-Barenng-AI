@@ -155,7 +155,7 @@ export default function ChatPage() {
         initial={{ opacity: 0, y: -10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3 }}
-        className="flex items-center justify-between border-b border-hairline bg-canvas px-4 py-3"
+        className="flex flex-wrap items-center justify-between gap-2 border-b border-hairline bg-canvas px-3 sm:px-4 py-2 sm:py-3"
       >
         <div className="flex items-center gap-2">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-ink">
@@ -166,11 +166,7 @@ export default function ChatPage() {
               strokeLinecap="round"
             />
           </svg>
-          <span className="text-nav-link font-sans font-medium text-ink">BelajarBareng</span>
-        </div>
-
-        <div className="flex-1 mx-4 max-w-md">
-          <ModeSelector currentMode={session.currentMode} onChange={handleModeChange} />
+          <span className="text-nav-link font-sans font-medium text-ink hidden sm:inline">BelajarBareng</span>
         </div>
 
         <motion.button
@@ -178,10 +174,14 @@ export default function ChatPage() {
           whileTap={{ scale: 0.97 }}
           onClick={handleEndSession}
           disabled={endingSession || messages.length === 0}
-          className="rounded-md border border-hairline px-3 py-1.5 text-caption font-sans font-medium text-muted hover:text-error hover:border-error/30 transition-colors disabled:opacity-40 disabled:pointer-events-none"
+          className="rounded-md border border-hairline px-2 sm:px-3 py-1.5 text-caption font-sans font-medium text-muted hover:text-error hover:border-error/30 transition-colors disabled:opacity-40 disabled:pointer-events-none"
         >
-          {endingSession ? 'Memproses...' : 'Akhiri Sesi'}
+          {endingSession ? '...' : 'Akhiri'}
         </motion.button>
+
+        <div className="w-full sm:w-auto sm:flex-1 sm:mx-4 sm:max-w-md order-last sm:order-none">
+          <ModeSelector currentMode={session.currentMode} onChange={handleModeChange} />
+        </div>
       </motion.header>
 
       {lastError && (

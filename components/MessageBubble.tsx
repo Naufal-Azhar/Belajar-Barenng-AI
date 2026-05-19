@@ -22,7 +22,7 @@ export default function MessageBubble({ role, content }: Props) {
       className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}
     >
       <div
-        className={`max-w-[85%] rounded-lg px-4 py-3 ${
+        className={`max-w-[90%] sm:max-w-[85%] rounded-lg px-4 py-3 overflow-hidden break-words ${
           isUser
             ? 'bg-primary text-on-primary'
             : 'bg-surface-card border border-hairline text-body'

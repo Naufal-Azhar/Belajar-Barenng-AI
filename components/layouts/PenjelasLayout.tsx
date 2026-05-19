@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import ChatStream from '@/components/ChatStream';
 import DocumentUploader from '@/components/DocumentUploader';
+import LoadingCat from '@/components/LoadingCat';
 import type { ModeLayoutProps } from './LayoutRouter';
 
 /**
@@ -74,8 +75,8 @@ export default function PenjelasLayout(props: ModeLayoutProps) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && !e.shiftKey && handleSend()}
-            placeholder="Ketik pertanyaan atau topik..."
-            className="input flex-1"
+            placeholder="Ketik pertanyaan..."
+            className="input flex-1 min-w-0"
             disabled={isStreaming}
           />
           <motion.button
@@ -83,9 +84,14 @@ export default function PenjelasLayout(props: ModeLayoutProps) {
             whileTap={{ scale: 0.95 }}
             onClick={handleSend}
             disabled={!input.trim() || isStreaming}
-            className="btn-primary"
+            className="btn-primary shrink-0"
           >
-            {isStreaming ? '...' : 'Kirim'}
+            {isStreaming ? (
+              /* EDIT CAPTION: Penjelas send button (caption opsional, kucing-only OK) */
+              <LoadingCat variant="button" caption="" />
+            ) : (
+              <><span className="hidden sm:inline">Kirim</span><span className="sm:hidden">→</span></>
+            )}
           </motion.button>
         </div>
       </motion.footer>
