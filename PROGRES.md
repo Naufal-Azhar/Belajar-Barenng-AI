@@ -48,3 +48,14 @@
 - Mengupdate file GIF untuk memperbaiki tampilan dan animasi menjadi lebih tajam dan halus, lalu di replace dari gif ke file format webm
 
 - menambahkan animasi loading pada setiap substract
+
+## update 19/5/2026 (selasa)
+
+> *Masih Brainstorming untuk penentuan apa lagi yang akan di ambil*
+
+---
+
+## 1. Brainstorming 
+- Perencanaan untuk fitur utama yang akan di implementasikan ke dalam project.
+- Penyusuaian untuk me reduce cost dari AI GEMINI yang akan digunakan, agar bisa lebih efisien dan dapat digunakan untuk kebutuhan demonstrasi dengan relatif user dia antara 10 - 200 user.
+- Penekanan Budget untuk memenuhi infrastruktur yang diperlukan, budge4t yang di keluarkan berada di harga 5$.

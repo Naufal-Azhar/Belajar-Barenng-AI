@@ -119,3 +119,42 @@ export interface SummaryPayload {
   recommendations: string[];
   createdAt: string;
 }
+
+// --- ASRM (Adaptive Spaced Repetition Memory) types ---
+
+export type CardState = 'new' | 'learning' | 'review' | 'relearning';
+export type ReviewRating = 'again' | 'hard' | 'good' | 'easy';
+
+export interface FlashCard {
+  cardId: string;
+  deviceId: string;
+  sessionId: string;
+  question: string;
+  answer: string;
+  concept: string;
+  state: CardState;
+  due: string; // ISO date
+  stability: number;
+  difficulty: number;
+  elapsedDays: number;
+  scheduledDays: number;
+  reps: number;
+  lapses: number;
+  weakStreak: number;
+  lastReview?: string; // ISO date
+  createdAt: string;
+}
+
+export interface ReviewLog {
+  cardId: string;
+  rating: ReviewRating;
+  grade: number; // 0-4
+  feedback: string;
+  reviewedAt: string;
+}
+
+export interface ExtractedCard {
+  question: string;
+  answer: string;
+  concept: string;
+}

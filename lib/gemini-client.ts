@@ -131,10 +131,14 @@ let _client: GeminiClientInterface | null = null;
 export function getGeminiClient(): GeminiClientInterface {
   if (!_client) {
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) throw new Error('GEMINI_API_KEY not set');
-    _client = new GeminiClient(apiKey, process.env.GEMINI_MODEL || 'gemini-1.5-flash');
+    if (!apiKey || process.env.USE_MOCK_AI === 'true') {
+      const { MockGeminiClient } = require('./gemini-client-mock');
+      _client = new MockGeminiClient();
+    } else {
+      _client = new GeminiClient(apiKey, process.env.GEMINI_MODEL || 'gemini-1.5-flash');
+    }
   }
-  return _client;
+  return _client!;
 }
 
 export function setGeminiClient(client: GeminiClientInterface) {

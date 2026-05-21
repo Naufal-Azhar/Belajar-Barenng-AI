@@ -69,6 +69,31 @@ export const summaryBodySchema = z.object({
   sessionId: z.string().min(1),
 });
 
+// --- ASRM schemas ---
+
+export const extractBodySchema = z.object({
+  sessionId: z.string().min(1),
+  deviceId: z.string().min(1),
+});
+
+export const extractedCardSchema = z.object({
+  question: z.string().min(1),
+  answer: z.string().min(1),
+  concept: z.string().min(1),
+});
+
+export const saveCardsBodySchema = z.object({
+  deviceId: z.string().min(1),
+  sessionId: z.string().min(1),
+  cards: z.array(extractedCardSchema).min(1).max(10),
+});
+
+export const reviewBodySchema = z.object({
+  cardId: z.string().min(1),
+  deviceId: z.string().min(1),
+  userAnswer: z.string().min(1),
+});
+
 // --- Upload validation ---
 
 export const MAX_MATERIAL_SIZE = 10 * 1024 * 1024; // 10 MB

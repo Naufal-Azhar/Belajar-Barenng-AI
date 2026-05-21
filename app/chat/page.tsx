@@ -1,12 +1,14 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useSession } from '@/hooks/useSession';
 import { useChatStream } from '@/hooks/useChatStream';
+import { useExtractionTrigger } from '@/hooks/useExtractionTrigger';
 import ModeSelector from '@/components/ModeSelector';
 import ErrorBanner from '@/components/ErrorBanner';
+import ExtractionModal from '@/components/ExtractionModal';
 import LayoutRouter from '@/components/layouts/LayoutRouter';
 import type { LearningMode, ExplainerSectionLabel } from '@/lib/types';
 
@@ -23,6 +25,26 @@ export default function ChatPage() {
     dispatch,
   );
   const [endingSession, setEndingSession] = useState(false);
+  const [showExtraction, setShowExtraction] = useState(false);
+  const { shouldShow: extractionReady, accept: acceptExtraction, dismiss: dismissExtraction } = useExtractionTrigger(messages, session);
+
+  // Cross-mode bridge: auto-send message if coming from review
+  useEffect(() => {
+    if (status !== 'ready' || !session) return;
+    const raw = localStorage.getItem('belajar.crossMode');
+    if (!raw) return;
+    localStorage.removeItem('belajar.crossMode');
+    try {
+      const data = JSON.parse(raw);
+      const mode = data.mode === 'latihan' ? 'latihan' : 'socratic';
+      dispatch({ type: 'SET_MODE', mode });
+      sendMessage({
+        message: `Bantu saya memahami konsep: ${data.concept}. Saya sudah coba menjawab "${data.userAnswer}" tapi jawaban yang benar adalah "${data.answer}".`,
+        mode,
+      });
+    } catch {}
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status]);
 
   if (status === 'no-session') {
     return (
@@ -192,6 +214,23 @@ export default function ChatPage() {
             retry();
           }}
         />
+      )}
+
+      {/* Extraction trigger banner */}
+      {extractionReady && !showExtraction && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 bg-primary text-white px-4 py-2.5 rounded-full shadow-lg flex items-center gap-3 text-sm"
+        >
+          <span>💡 Simpan konsep ke memori?</span>
+          <button onClick={() => { acceptExtraction(); setShowExtraction(true); }} className="font-medium underline">Ya</button>
+          <button onClick={dismissExtraction} className="opacity-70">Nanti</button>
+        </motion.div>
+      )}
+
+      {showExtraction && session && (
+        <ExtractionModal sessionId={session.sessionId} onClose={() => setShowExtraction(false)} />
       )}
 
       {/* Layout Router — pilih layout sesuai currentMode */}
