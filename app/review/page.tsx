@@ -140,7 +140,7 @@ export default function ReviewPage() {
               exit={{ opacity: 0, x: -30 }}
               className="w-full max-w-md"
             >
-              <div className="bg-surface rounded-xl p-6 shadow-sm border border-hairline">
+              <div className="bg-surface rounded-xl p-6 shadow-subtle border border-hairline">
                 <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded mb-3 inline-block">
                   {currentCard.concept}
                 </span>
@@ -170,7 +170,7 @@ export default function ReviewPage() {
               animate={{ opacity: 1, scale: 1 }}
               className="w-full max-w-md"
             >
-              <div className="bg-surface rounded-xl p-6 shadow-sm border border-hairline">
+              <div className="bg-surface rounded-xl p-6 shadow-subtle border border-hairline">
                 <div className="text-center mb-4">
                   <span className="text-3xl">{gradeEmoji(feedback.grade)}</span>
                   <p className="text-sm text-muted mt-1">

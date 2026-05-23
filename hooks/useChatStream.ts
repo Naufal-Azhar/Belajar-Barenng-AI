@@ -84,6 +84,9 @@ export function useChatStream(sessionId: string | undefined, dispatch: Dispatch)
               case 'token':
                 dispatch({ type: 'APPEND_AI_TOKEN', token: evt.data as string });
                 break;
+              case 'text-chunk':
+                dispatch({ type: 'APPEND_AI_TOKEN', token: (evt.data as { text: string }).text });
+                break;
               case 'payload':
                 dispatch({
                   type: 'APPEND_AI_PAYLOAD',

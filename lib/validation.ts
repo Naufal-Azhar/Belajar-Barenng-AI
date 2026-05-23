@@ -136,12 +136,15 @@ export class NotFoundError extends Error {
   }
 }
 
-export class GeminiError extends Error {
+export class LLMError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'GeminiError';
+    this.name = 'LLMError';
   }
 }
+
+/** @deprecated Use LLMError instead */
+export const GeminiError = LLMError;
 
 export class FirestoreError extends Error {
   constructor(message: string) {

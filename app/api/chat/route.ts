@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import {
   chatBodySchema,
   FirestoreError,
-  GeminiError,
+  LLMError,
   quizPayloadSchema,
   latihanPayloadSchema,
   explainerPayloadSchema,
@@ -10,9 +10,10 @@ import {
   SchemaValidationError,
 } from '@/lib/validation';
 import { getSessionRepository } from '@/lib/session-repository';
-import { getGeminiClient } from '@/lib/gemini-client';
-import { buildSystemPrompt } from '@/lib/prompt-builder';
+import { getLLMClient } from '@/lib/llm-client';
+import { buildSystemPrompt, BASE_TONE_GENERAL } from '@/lib/prompt-builder';
 import { createSseStream } from '@/lib/sse';
+import { isNonAcademic } from '@/lib/intent';
 import type {
   LearningMode,
   QuizPayload,
@@ -36,21 +37,13 @@ export async function POST(request: NextRequest) {
 
     const { sessionId, message, mode } = parsed.data;
 
-    // Validate message not empty
     const trimmedMessage = message.trim();
     if (!trimmedMessage) {
-      return Response.json(
-        { error: 'Pesan tidak boleh kosong' },
-        { status: 400 }
-      );
+      return Response.json({ error: 'Pesan tidak boleh kosong' }, { status: 400 });
     }
 
-    // Validate message length
     if (trimmedMessage.length > MAX_MESSAGE_LENGTH) {
-      return Response.json(
-        { error: 'Pesan terlalu panjang (max 4000 karakter)' },
-        { status: 400 }
-      );
+      return Response.json({ error: 'Pesan terlalu panjang (max 4000 karakter)' }, { status: 400 });
     }
 
     const repo = getSessionRepository();
@@ -60,13 +53,11 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'Sesi tidak ditemukan' }, { status: 404 });
     }
 
-    // Update mode if provided
     const activeMode: LearningMode = mode || session.currentMode;
     if (mode && mode !== session.currentMode) {
       await repo.update(sessionId, { currentMode: mode });
     }
 
-    // Save user message
     await repo.appendMessage(sessionId, {
       sessionId,
       role: 'user',
@@ -75,14 +66,12 @@ export async function POST(request: NextRequest) {
       createdAt: new Date().toISOString(),
     });
 
-    // Get history
     const messages = await repo.listMessages(sessionId);
-    const history = messages.map((m) => ({
-      role: m.role === 'user' ? 'user' as const : 'model' as const,
-      text: m.content,
+    const history = messages.slice(0, -1).map((m) => ({
+      role: (m.role === 'user' ? 'user' : 'assistant') as 'user' | 'assistant',
+      content: m.content,
     }));
 
-    // Build system prompt
     const systemPrompt = buildSystemPrompt({
       profile: session.profileType,
       mode: activeMode,
@@ -90,29 +79,43 @@ export async function POST(request: NextRequest) {
       topic: session.topic,
     });
 
-    const gemini = getGeminiClient();
-
-    // All modes return structured payload now
+    const llm = getLLMClient();
     const { stream, write, close } = createSseStream();
 
-    type AnyPayload =
-      | ExplainerPayload
-      | SocraticPayload
-      | QuizPayload
-      | LatihanPayload;
+    console.log('[chat] mode=%s msg-len=%d', activeMode, trimmedMessage.length);
+
+    type AnyPayload = ExplainerPayload | SocraticPayload | QuizPayload | LatihanPayload;
 
     (async () => {
       try {
+        // Non-academic messages → stream plain text
+        if (isNonAcademic(trimmedMessage)) {
+          let fullText = '';
+          for await (const chunk of llm.streamText({ systemPrompt: BASE_TONE_GENERAL, history, userMessage: trimmedMessage })) {
+            fullText += chunk;
+            write({ type: 'text-chunk', data: { text: chunk } });
+          }
+          const aiMsg = await repo.appendMessage(sessionId, {
+            sessionId,
+            role: 'ai',
+            mode: activeMode,
+            content: fullText,
+            createdAt: new Date().toISOString(),
+          });
+          write({ type: 'done', data: { messageId: aiMsg.messageId } });
+          return;
+        }
+
         const schema = buildSchemaForMode(activeMode);
 
-        const payload = await gemini.generateStructured<AnyPayload>({
+        const payload = await llm.generateStructured<AnyPayload>({
           systemPrompt,
-          history: history.slice(0, -1),
+          history,
           userMessage: trimmedMessage,
-          schema,
+          schemaName: activeMode,
+          schemaDescription: JSON.stringify(schema),
         });
 
-        // Validate with Zod
         const validators: Record<LearningMode, { safeParse: (p: unknown) => { success: boolean } }> = {
           explainer: explainerPayloadSchema,
           socratic: socraticPayloadSchema,
@@ -124,7 +127,6 @@ export async function POST(request: NextRequest) {
           throw new SchemaValidationError(`Invalid ${activeMode} payload from AI`);
         }
 
-        // Save AI message with payload
         const aiMsg = await repo.appendMessage(sessionId, {
           sessionId,
           role: 'ai',
@@ -137,9 +139,8 @@ export async function POST(request: NextRequest) {
         write({ type: 'payload', data: payload });
         write({ type: 'done', data: { messageId: aiMsg.messageId } });
       } catch (err) {
-        if (err instanceof GeminiError) {
-          write({ type: 'error', data: { message: 'AI sedang sibuk, coba lagi sebentar' } });
-        } else if (err instanceof SchemaValidationError) {
+        console.error('[chat] AI error:', (err as Error).message || err);
+        if (err instanceof LLMError || err instanceof SchemaValidationError) {
           write({ type: 'error', data: { message: 'AI sedang sibuk, coba lagi sebentar' } });
         } else {
           write({ type: 'error', data: { message: 'Terjadi kesalahan tak terduga' } });
@@ -158,15 +159,9 @@ export async function POST(request: NextRequest) {
     });
   } catch (err) {
     if (err instanceof FirestoreError) {
-      return Response.json(
-        { error: 'Layanan penyimpanan belum tersedia, coba lagi' },
-        { status: 503 }
-      );
+      return Response.json({ error: 'Layanan penyimpanan belum tersedia, coba lagi' }, { status: 503 });
     }
-    return Response.json(
-      { error: 'Terjadi kesalahan tak terduga' },
-      { status: 500 }
-    );
+    return Response.json({ error: 'Terjadi kesalahan tak terduga' }, { status: 500 });
   }
 }
 
@@ -191,17 +186,7 @@ function buildSchemaForMode(mode: LearningMode): object {
         properties: {
           kind: { type: 'string', enum: ['latihan'] },
           question: { type: 'string' },
-          steps: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                title: { type: 'string' },
-                detail: { type: 'string' },
-              },
-              required: ['title', 'detail'],
-            },
-          },
+          steps: { type: 'array', items: { type: 'object', properties: { title: { type: 'string' }, detail: { type: 'string' } }, required: ['title', 'detail'] } },
         },
         required: ['kind', 'question', 'steps'],
       };
@@ -211,17 +196,7 @@ function buildSchemaForMode(mode: LearningMode): object {
         properties: {
           kind: { type: 'string', enum: ['explainer'] },
           title: { type: 'string' },
-          sections: {
-            type: 'array',
-            items: {
-              type: 'object',
-              properties: {
-                label: { type: 'string', enum: ['Inti', 'Analogi', 'Contoh', 'TL;DR'] },
-                body: { type: 'string' },
-              },
-              required: ['label', 'body'],
-            },
-          },
+          sections: { type: 'array', items: { type: 'object', properties: { label: { type: 'string', enum: ['Inti', 'Analogi', 'Contoh', 'TL;DR'] }, body: { type: 'string' } }, required: ['label', 'body'] } },
           keyTerms: { type: 'array', items: { type: 'string' } },
         },
         required: ['kind', 'title', 'sections'],

@@ -3,11 +3,11 @@ import {
   summaryBodySchema,
   summaryPayloadSchema,
   FirestoreError,
-  GeminiError,
+  LLMError,
   SchemaValidationError,
 } from '@/lib/validation';
 import { getSessionRepository } from '@/lib/session-repository';
-import { getGeminiClient } from '@/lib/gemini-client';
+import { getLLMClient } from '@/lib/llm-client';
 import { buildSystemPrompt } from '@/lib/prompt-builder';
 import type { SummaryPayload } from '@/lib/types';
 
@@ -27,21 +27,14 @@ export async function POST(request: NextRequest) {
     const session = await repo.get(sessionId);
 
     if (!session) {
-      return Response.json(
-        { error: 'Sesi tidak ditemukan atau kosong' },
-        { status: 404 }
-      );
+      return Response.json({ error: 'Sesi tidak ditemukan atau kosong' }, { status: 404 });
     }
 
     const messages = await repo.listMessages(sessionId);
     if (messages.length === 0) {
-      return Response.json(
-        { error: 'Sesi tidak ditemukan atau kosong' },
-        { status: 404 }
-      );
+      return Response.json({ error: 'Sesi tidak ditemukan atau kosong' }, { status: 404 });
     }
 
-    // Build conversation context for summary
     const conversationText = messages
       .map((m) => `${m.role === 'user' ? 'User' : 'AI'}: ${m.content}`)
       .join('\n');
@@ -53,7 +46,6 @@ export async function POST(request: NextRequest) {
       topic: session.topic,
     })}\n\nBuatkan ringkasan sesi belajar ini dalam format JSON dengan field: topicsCovered (array string topik yang dibahas), keyPoints (array string poin pemahaman), recommendations (array string rekomendasi topik lanjutan), createdAt (ISO string waktu sekarang).`;
 
-    const gemini = getGeminiClient();
     const schema = {
       type: 'object',
       properties: {
@@ -65,38 +57,29 @@ export async function POST(request: NextRequest) {
       required: ['topicsCovered', 'keyPoints', 'recommendations', 'createdAt'],
     };
 
-    const payload = await gemini.generateStructured<SummaryPayload>({
+    const llm = getLLMClient();
+    const payload = await llm.generateStructured<SummaryPayload>({
       systemPrompt,
       history: [],
       userMessage: `Berikut percakapan sesi belajar:\n\n${conversationText}`,
-      schema,
+      schemaName: 'SummaryPayload',
+      schemaDescription: JSON.stringify(schema),
     });
 
-    // Validate
     const result = summaryPayloadSchema.safeParse(payload);
     if (!result.success) {
       throw new SchemaValidationError('Invalid summary payload from AI');
     }
 
     await repo.saveSummary(sessionId, payload);
-
     return Response.json(payload);
   } catch (err) {
-    if (err instanceof GeminiError || err instanceof SchemaValidationError) {
-      return Response.json(
-        { error: 'AI sedang sibuk, coba lagi sebentar' },
-        { status: 502 }
-      );
+    if (err instanceof LLMError || err instanceof SchemaValidationError) {
+      return Response.json({ error: 'AI sedang sibuk, coba lagi sebentar' }, { status: 502 });
     }
     if (err instanceof FirestoreError) {
-      return Response.json(
-        { error: 'Layanan penyimpanan belum tersedia, coba lagi' },
-        { status: 503 }
-      );
+      return Response.json({ error: 'Layanan penyimpanan belum tersedia, coba lagi' }, { status: 503 });
     }
-    return Response.json(
-      { error: 'Terjadi kesalahan tak terduga' },
-      { status: 500 }
-    );
+    return Response.json({ error: 'Terjadi kesalahan tak terduga' }, { status: 500 });
   }
 }

@@ -77,7 +77,7 @@ export default function ExtractionModal({ sessionId, onClose }: Props) {
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.95, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
-          className="w-full max-w-md rounded-xl bg-surface p-5 shadow-xl"
+          className="w-full max-w-md rounded-xl bg-surface p-5 shadow-subtle"
         >
           {stage === 'loading' && (
             <div className="text-center py-8">

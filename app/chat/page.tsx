@@ -221,7 +221,7 @@ export default function ChatPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 bg-primary text-white px-4 py-2.5 rounded-full shadow-lg flex items-center gap-3 text-sm"
+          className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 bg-primary text-white px-4 py-2.5 rounded-full shadow-subtle flex items-center gap-3 text-sm"
         >
           <span>💡 Simpan konsep ke memori?</span>
           <button onClick={() => { acceptExtraction(); setShowExtraction(true); }} className="font-medium underline">Ya</button>

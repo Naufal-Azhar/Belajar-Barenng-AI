@@ -8,6 +8,7 @@ import {
 } from '@/lib/validation';
 import { getSessionRepository } from '@/lib/session-repository';
 import { getMarkdownCompiler } from '@/lib/markdown-compiler';
+import { uploadFile } from '@/lib/storage';
 import type { DocumentContext, MaterialMimeType } from '@/lib/types';
 
 export const runtime = 'nodejs';
@@ -80,6 +81,10 @@ export async function POST(request: NextRequest) {
         ? { compilerWarnings: result.warnings }
         : {}),
     };
+
+    // Persist original file to Cloud Storage (non-blocking, best-effort)
+    const gcsUri = await uploadFile(sessionId, file.name, buffer, mimeType).catch(() => null);
+    if (gcsUri) docContext.gcsUri = gcsUri;
 
     await repo.setDocumentContext(sessionId, docContext);
 

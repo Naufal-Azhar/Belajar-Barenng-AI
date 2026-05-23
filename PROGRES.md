@@ -59,3 +59,33 @@
 - Perencanaan untuk fitur utama yang akan di implementasikan ke dalam project.
 - Penyusuaian untuk me reduce cost dari AI GEMINI yang akan digunakan, agar bisa lebih efisien dan dapat digunakan untuk kebutuhan demonstrasi dengan relatif user dia antara 10 - 200 user.
 - Penekanan Budget untuk memenuhi infrastruktur yang diperlukan, budge4t yang di keluarkan berada di harga 5$.
+
+## update 21/5/2026 (kamis)
+
+> *Tambahan fitur *
+
+---
+
+## 1. Penambahan fitur ASRM 
+- Penambahan fitur ASRM (Active Stress Reduction Method) untuk mengurangi stress dan meningkatkan kualitas belajar agar user tidak merasa bosan dan stress.
+
+## 2. Improve fitur 
+- Improve fitur untuk dark mode, warm tone dan shadow clean-up agar si user betah memakai aplikasi nya.
+
+## 3. Mencoba AI
+- Dalam tahap pencobaan atau uji coba AI agar bisa berjalan dan menerima input dari user.
+
+## update 22/5/2026 (jumat)
+
+> *Migrasi ke Google Gemini API*
+
+--- 
+## 1. Migrasi ke Google Gemini API
+
+- Full migrate ke Google Gemini API (`@google/generative-ai` SDK, model `gemini-2.0-flash`)
+- Hapus dependency `openai`, ganti dengan `@google/generative-ai@0.21.0`
+- Tambah `@google-cloud/storage@7.14.0` untuk persist file upload ke GCS
+- Buat `deploy/setup-gcp.sh` untuk one-time GCP project setup
+- Update `deploy/deploy.sh` untuk Cloud Run deploy dengan service account auth
+- Semua API routes tetap pakai abstraksi `getLLMClient()` — zero breaking change
+- 17 tests pass, TypeScript compiles clean

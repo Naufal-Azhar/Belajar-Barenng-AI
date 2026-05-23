@@ -13,6 +13,7 @@ export type StreamPayload =
 
 export type SseEvent =
   | { type: 'token'; data: string }
+  | { type: 'text-chunk'; data: { text: string } }
   | { type: 'payload'; data: StreamPayload }
   | { type: 'done'; data: { messageId: string } }
   | { type: 'error'; data: { message: string } };

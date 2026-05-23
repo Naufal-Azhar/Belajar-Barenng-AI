@@ -1,13 +1,17 @@
 #!/bin/bash
 # Deploy BelajarBareng AI ke Google Cloud Run
 # Usage: ./deploy/deploy.sh <PROJECT_ID>
+#
+# Prerequisites: Run setup-gcp.sh first
 
 set -e
 
 PROJECT_ID=${1:-$(gcloud config get-value project)}
 REGION="asia-southeast2"
 SERVICE_NAME="belajar-bareng-ai"
-IMAGE="asia-southeast2-docker.pkg.dev/${PROJECT_ID}/app/${SERVICE_NAME}:latest"
+IMAGE="${REGION}-docker.pkg.dev/${PROJECT_ID}/app/${SERVICE_NAME}:latest"
+SA_EMAIL="belajar-bareng-runtime@${PROJECT_ID}.iam.gserviceaccount.com"
+BUCKET="${PROJECT_ID}-uploads"
 
 echo "🚀 Deploying BelajarBareng AI to Cloud Run..."
 echo "   Project: ${PROJECT_ID}"
@@ -31,10 +35,10 @@ gcloud run deploy "${SERVICE_NAME}" \
   --concurrency 80 \
   --timeout 300s \
   --min-instances 0 \
-  --max-instances 5 \
-  --set-env-vars "NODE_ENV=production,GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GEMINI_MODEL=gemini-1.5-flash" \
+  --max-instances 3 \
+  --set-env-vars "NODE_ENV=production,GOOGLE_CLOUD_PROJECT=${PROJECT_ID},GEMINI_MODEL=gemini-2.0-flash,GCS_BUCKET=${BUCKET}" \
   --set-secrets "GEMINI_API_KEY=gemini-api-key:latest" \
-  --service-account "belajar-bareng-runtime@${PROJECT_ID}.iam.gserviceaccount.com"
+  --service-account "${SA_EMAIL}"
 
 echo ""
 echo "✅ Deployment complete!"

@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
-import { reviewBodySchema, GeminiError } from '@/lib/validation';
+import { reviewBodySchema, LLMError } from '@/lib/validation';
 import { getCardRepository } from '@/lib/card-repository';
-import { getGeminiClient } from '@/lib/gemini-client';
+import { getLLMClient } from '@/lib/llm-client';
 import { scheduleCard, gradeToRating } from '@/lib/fsrs';
 
 export const runtime = 'nodejs';
@@ -13,7 +13,7 @@ const REVIEW_PROMPT = `Kamu adalah penilai jawaban flashcard. Tugasmu:
 
 Jawab dalam JSON sesuai schema.`;
 
-const REVIEW_SCHEMA = {
+const REVIEW_SCHEMA = JSON.stringify({
   type: 'object',
   properties: {
     grade: { type: 'integer' },
@@ -21,7 +21,7 @@ const REVIEW_SCHEMA = {
     rephrasedQuestion: { type: 'string' },
   },
   required: ['grade', 'feedback', 'rephrasedQuestion'],
-};
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -38,27 +38,20 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'Kartu tidak ditemukan' }, { status: 404 });
     }
 
-    // AI grading + rephrase
-    const gemini = getGeminiClient();
-    const result = await gemini.generateStructured<{
-      grade: number;
-      feedback: string;
-      rephrasedQuestion: string;
-    }>({
+    const llm = getLLMClient();
+    const result = await llm.generateStructured<{ grade: number; feedback: string; rephrasedQuestion: string }>({
       systemPrompt: REVIEW_PROMPT,
       history: [],
       userMessage: `Pertanyaan: ${card.question}\nJawaban benar: ${card.answer}\nJawaban user: ${userAnswer}`,
-      schema: REVIEW_SCHEMA,
+      schemaName: 'ReviewGrading',
+      schemaDescription: REVIEW_SCHEMA,
     });
 
     const grade = Math.max(0, Math.min(4, result.grade));
     const rating = gradeToRating(grade);
-
-    // Schedule card
     const updated = scheduleCard(card, rating);
     const newWeakStreak = grade <= 1 ? card.weakStreak + 1 : 0;
 
-    // Update card in DB
     await repo.updateCard(deviceId, cardId, {
       ...updated,
       weakStreak: newWeakStreak,
@@ -66,23 +59,14 @@ export async function POST(request: NextRequest) {
       question: result.rephrasedQuestion || card.question,
     });
 
-    // Cross-mode suggestion if weak
     let crossModeSuggestion = null;
     if (newWeakStreak >= 3) {
-      crossModeSuggestion = {
-        mode: newWeakStreak % 2 === 0 ? 'latihan' : 'socratic',
-        concept: card.concept,
-      };
+      crossModeSuggestion = { mode: newWeakStreak % 2 === 0 ? 'latihan' : 'socratic', concept: card.concept };
     }
 
-    return Response.json({
-      grade,
-      feedback: result.feedback,
-      nextDue: updated.due,
-      crossModeSuggestion,
-    });
+    return Response.json({ grade, feedback: result.feedback, nextDue: updated.due, crossModeSuggestion });
   } catch (err) {
-    if (err instanceof GeminiError) {
+    if (err instanceof LLMError) {
       return Response.json({ error: 'AI sedang sibuk, coba lagi' }, { status: 503 });
     }
     return Response.json({ error: 'Terjadi kesalahan' }, { status: 500 });

@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server';
-import { extractBodySchema, FirestoreError, GeminiError } from '@/lib/validation';
+import { extractBodySchema, FirestoreError, LLMError } from '@/lib/validation';
 import { getSessionRepository } from '@/lib/session-repository';
-import { getGeminiClient } from '@/lib/gemini-client';
+import { getLLMClient } from '@/lib/llm-client';
 import type { ExtractedCard } from '@/lib/types';
 
 export const runtime = 'nodejs';
@@ -15,24 +15,20 @@ Dari konteks percakapan dan materi berikut, buat 3-5 flashcard. Setiap kartu har
 
 Fokus pada konsep inti yang perlu diingat jangka panjang. Hindari pertanyaan trivial.`;
 
-const EXTRACTION_SCHEMA = {
+const EXTRACTION_SCHEMA = JSON.stringify({
   type: 'object',
   properties: {
     cards: {
       type: 'array',
       items: {
         type: 'object',
-        properties: {
-          question: { type: 'string' },
-          answer: { type: 'string' },
-          concept: { type: 'string' },
-        },
+        properties: { question: { type: 'string' }, answer: { type: 'string' }, concept: { type: 'string' } },
         required: ['question', 'answer', 'concept'],
       },
     },
   },
   required: ['cards'],
-};
+});
 
 export async function POST(request: NextRequest) {
   try {
@@ -52,7 +48,6 @@ export async function POST(request: NextRequest) {
     const messages = await repo.listMessages(sessionId);
     const lastMessages = messages.slice(-10);
 
-    // Build context for extraction
     let context = '';
     if (session.documentContext?.compiledMarkdown) {
       context += `Materi:\n${session.documentContext.compiledMarkdown.slice(0, 3000)}\n\n`;
@@ -65,18 +60,19 @@ export async function POST(request: NextRequest) {
       context += `${m.role === 'user' ? 'User' : 'AI'}: ${m.content.slice(0, 500)}\n`;
     }
 
-    const gemini = getGeminiClient();
-    const result = await gemini.generateStructured<{ cards: ExtractedCard[] }>({
+    const llm = getLLMClient();
+    const result = await llm.generateStructured<{ cards: ExtractedCard[] }>({
       systemPrompt: EXTRACTION_PROMPT,
       history: [],
       userMessage: context,
-      schema: EXTRACTION_SCHEMA,
+      schemaName: 'FlashcardExtraction',
+      schemaDescription: EXTRACTION_SCHEMA,
     });
 
     const cards = (result.cards || []).slice(0, 5);
     return Response.json({ cards });
   } catch (err) {
-    if (err instanceof GeminiError) {
+    if (err instanceof LLMError) {
       return Response.json({ error: 'AI sedang sibuk, coba lagi' }, { status: 503 });
     }
     if (err instanceof FirestoreError) {

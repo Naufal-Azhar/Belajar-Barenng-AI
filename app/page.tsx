@@ -69,7 +69,7 @@ export default function HomePage() {
           animate={{ opacity: 1, y: 0 }}
           className="fixed top-4 left-1/2 -translate-x-1/2 z-50 w-full max-w-sm px-4"
         >
-          <div className="bg-surface border border-hairline rounded-xl p-4 shadow-lg">
+          <div className="bg-surface border border-hairline rounded-xl p-4 shadow-subtle">
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold text-ink">🧠 Memori Kamu</h3>
               {stats.streak > 0 && (

@@ -32,7 +32,7 @@ export interface DocumentContext {
   sizeBytes: number;
   mimeType: MaterialMimeType;
   /**
-   * Markdown hasil Markdown_Compiler (PDF: Gemini, DOCX: mammoth).
+   * Markdown hasil Markdown_Compiler (PDF: pdf-parse, DOCX: mammoth).
    * Hanya field inilah yang masuk ke prompt AI — byte mentah PDF/DOCX
    * TIDAK PERNAH disimpan setelah compile selesai (Req 16.5).
    */
@@ -40,6 +40,8 @@ export interface DocumentContext {
   uploadedAt: string;
   /** Optional: warnings dari mammoth (mis. style yang tidak dikonversi) */
   compilerWarnings?: string[];
+  /** GCS URI of the original uploaded file */
+  gcsUri?: string;
 }
 
 export interface Session {

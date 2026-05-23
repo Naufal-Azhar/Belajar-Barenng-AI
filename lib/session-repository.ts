@@ -124,23 +124,22 @@ export class FirestoreSessionRepository implements SessionRepository {
   }
 }
 
-// Singleton
-let _repo: SessionRepository | null = null;
+// Singleton — use globalThis to survive HMR
+const globalKey = '__belajar_session_repo__';
 
 export function getSessionRepository(): SessionRepository {
-  if (!_repo) {
-    // Gunakan in-memory jika USE_MEMORY_STORE di-set
+  if (!(globalThis as any)[globalKey]) {
     if (process.env.USE_MEMORY_STORE === 'true') {
       const { InMemorySessionRepository } = require('./session-repository-memory');
-      _repo = new InMemorySessionRepository();
+      (globalThis as any)[globalKey] = new InMemorySessionRepository();
     } else {
-      _repo = new FirestoreSessionRepository();
+      (globalThis as any)[globalKey] = new FirestoreSessionRepository();
     }
   }
-  return _repo!;
+  return (globalThis as any)[globalKey];
 }
 
 // For testing: allow injection
 export function setSessionRepository(repo: SessionRepository) {
-  _repo = repo;
+  (globalThis as any)[globalKey] = repo;
 }

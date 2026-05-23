@@ -21,12 +21,12 @@
   }
 
   .dark {
-    --color-canvas: #181715;
-    --color-surface-soft: #1f1e1b;
-    --color-surface-card: #252320;
-    --color-surface-cream-strong: #2e2b27;
-    --color-hairline: #3a3733;
-    --color-hairline-soft: #302d29;
+    --color-canvas: #24221f;
+    --color-surface-soft: #2b2926;
+    --color-surface-card: #33302c;
+    --color-surface-cream-strong: #3b3834;
+    --color-hairline: #4a4640;
+    --color-hairline-soft: #403d38;
     --color-ink: #faf9f5;
     --color-body: #e8e0d2;
     --color-body-strong: #faf9f5;
