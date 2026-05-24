@@ -1,7 +1,8 @@
 'use client';
 
-import { useReducer, useEffect, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
+import { useReducer, useEffect, useCallback, useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { getDeviceId } from '@/lib/device-id';
 import type { Session, Message, LearningMode } from '@/lib/types';
 
 type SessionStatus = 'no-session' | 'hydrating' | 'ready' | 'error';
@@ -76,10 +77,30 @@ function sessionReducer(state: SessionState, action: SessionAction): SessionStat
   }
 }
 
-const STORAGE_KEY = 'belajar.sessionId';
+const ACTIVE_SESSION_KEY = 'belajar.activeSessionId';
+const LEGACY_SESSION_KEY = 'belajar.sessionId';
+
+/**
+ * Migrasi legacy localStorage key: belajar.sessionId → belajar.activeSessionId.
+ * Dijalankan sekali saat hook pertama mount; safe untuk dipanggil berulang.
+ */
+function migrateLegacyStorageKey(): string | null {
+  if (typeof window === 'undefined') return null;
+  const newKey = localStorage.getItem(ACTIVE_SESSION_KEY);
+  if (newKey) return newKey;
+
+  const legacyKey = localStorage.getItem(LEGACY_SESSION_KEY);
+  if (legacyKey) {
+    localStorage.setItem(ACTIVE_SESSION_KEY, legacyKey);
+    localStorage.removeItem(LEGACY_SESSION_KEY);
+    return legacyKey;
+  }
+  return null;
+}
 
 export function useSession() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [state, dispatch] = useReducer(sessionReducer, {
     status: 'no-session',
     session: null,
@@ -87,23 +108,33 @@ export function useSession() {
     error: null,
   });
 
+  // Resolve effective sessionId: query param > localStorage active > null
+  const queryParamSessionId = searchParams?.get('sessionId') ?? null;
+  const effectiveSessionId = useMemo(() => {
+    if (queryParamSessionId) return queryParamSessionId;
+    return typeof window !== 'undefined' ? migrateLegacyStorageKey() : null;
+  }, [queryParamSessionId]);
+
   useEffect(() => {
     let cancelled = false;
 
-    const sessionId = localStorage.getItem(STORAGE_KEY);
-    if (!sessionId) {
+    if (!effectiveSessionId) {
       dispatch({ type: 'SET_NO_SESSION' });
       return;
     }
 
     dispatch({ type: 'SET_HYDRATING' });
 
-    fetch(`/api/session?id=${sessionId}`)
+    fetch(`/api/sessions/${effectiveSessionId}`, {
+      headers: { 'X-Device-Id': getDeviceId() },
+    })
       .then((res) => {
         if (cancelled) return null;
         if (!res.ok) {
-          // Session tidak ditemukan — hapus dari localStorage dan reset
-          localStorage.removeItem(STORAGE_KEY);
+          // Session not found / forbidden — clear only if pakai localStorage source
+          if (!queryParamSessionId) {
+            localStorage.removeItem(ACTIVE_SESSION_KEY);
+          }
           dispatch({ type: 'SET_NO_SESSION' });
           return null;
         }
@@ -112,25 +143,35 @@ export function useSession() {
       .then((data) => {
         if (cancelled) return;
         if (data) {
+          // Update localStorage active untuk auto-resume
+          if (typeof window !== 'undefined') {
+            localStorage.setItem(ACTIVE_SESSION_KEY, data.session.sessionId);
+          }
           dispatch({ type: 'SET_READY', session: data.session, messages: data.messages });
         }
       })
       .catch(() => {
         if (cancelled) return;
-        // Jika error jaringan, hapus session lama agar tidak loop
-        localStorage.removeItem(STORAGE_KEY);
+        if (!queryParamSessionId) {
+          localStorage.removeItem(ACTIVE_SESSION_KEY);
+        }
         dispatch({ type: 'SET_NO_SESSION' });
       });
 
-    return () => { cancelled = true; };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [effectiveSessionId]);
 
   const createSession = useCallback(
     async (profileType: 'mahasiswa' | 'sma') => {
-      const res = await fetch('/api/session', {
+      const res = await fetch('/api/sessions', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Device-Id': getDeviceId(),
+        },
         body: JSON.stringify({ profileType }),
       });
 
@@ -139,24 +180,27 @@ export function useSession() {
       }
 
       const data = await res.json();
-      localStorage.setItem(STORAGE_KEY, data.sessionId);
+      localStorage.setItem(ACTIVE_SESSION_KEY, data.sessionId);
       dispatch({
         type: 'SET_READY',
         session: {
           sessionId: data.sessionId,
           profileType,
           currentMode: data.currentMode,
-          startedAt: new Date().toISOString(),
+          startedAt: data.startedAt,
+          ownerType: data.ownerType,
+          ownerId: data.ownerId,
+          updatedAt: data.updatedAt,
         },
         messages: [],
       });
-      return data.sessionId;
+      return data.sessionId as string;
     },
-    []
+    [],
   );
 
   const clearSession = useCallback(() => {
-    localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(ACTIVE_SESSION_KEY);
     dispatch({ type: 'SET_NO_SESSION' });
   }, []);
 

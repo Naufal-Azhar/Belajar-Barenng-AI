@@ -14,6 +14,7 @@ import { getLLMClient } from '@/lib/llm-client';
 import { buildSystemPrompt, BASE_TONE_GENERAL } from '@/lib/prompt-builder';
 import { createSseStream } from '@/lib/sse';
 import { isNonAcademic } from '@/lib/intent';
+import { generateAutoTitle } from '@/lib/auto-title';
 import type {
   LearningMode,
   QuizPayload,
@@ -53,9 +54,27 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: 'Sesi tidak ditemukan' }, { status: 404 });
     }
 
+    if (session.endedAt) {
+      return Response.json({ error: 'Sesi sudah berakhir, tidak bisa lanjut chat' }, { status: 409 });
+    }
+
+    if (session.isArchived) {
+      return Response.json({ error: 'Sesi sudah dihapus' }, { status: 404 });
+    }
+
     const activeMode: LearningMode = mode || session.currentMode;
     if (mode && mode !== session.currentMode) {
       await repo.update(sessionId, { currentMode: mode });
+    }
+
+    // Auto-title: set title pada first user message kalau session belum punya title.
+    // Tidak menimpa title yang sudah di-rename user secara manual.
+    if (!session.title || session.title.trim().length === 0) {
+      const autoTitle = generateAutoTitle(trimmedMessage);
+      await repo.updateTitle(sessionId, autoTitle);
+    } else {
+      // Bump updatedAt agar sesi naik ke atas di sidebar
+      await repo.touch(sessionId);
     }
 
     await repo.appendMessage(sessionId, {

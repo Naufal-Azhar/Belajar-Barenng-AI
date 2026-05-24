@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import ThemeToggle from '@/components/ThemeToggle';
+import ErrorBoundary from '@/components/ErrorBoundary';
 
 export const metadata: Metadata = {
   title: 'BelajarBareng AI — Teman Belajar Personal',
@@ -21,7 +22,7 @@ export default function RootLayout({
         <script dangerouslySetInnerHTML={{ __html: themeScript }} />
       </head>
       <body className="min-h-screen font-sans bg-canvas">
-        {children}
+        <ErrorBoundary>{children}</ErrorBoundary>
         <ThemeToggle />
       </body>
     </html>

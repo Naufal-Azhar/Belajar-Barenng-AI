@@ -27,7 +27,7 @@ export default function SummaryPage() {
   }
 
   const handleNewSession = () => {
-    localStorage.removeItem('belajar.sessionId');
+    localStorage.removeItem('belajar.activeSessionId');
     sessionStorage.removeItem('belajar.summary');
     router.push('/');
   };

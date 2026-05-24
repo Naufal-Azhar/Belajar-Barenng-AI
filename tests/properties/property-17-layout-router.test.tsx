@@ -28,6 +28,9 @@ const fakeSession: Session = {
   profileType: 'mahasiswa',
   currentMode: 'explainer',
   startedAt: new Date().toISOString(),
+  ownerType: 'device',
+  ownerId: 'test-device',
+  updatedAt: new Date().toISOString(),
 };
 
 const noop = () => {};

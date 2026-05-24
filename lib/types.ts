@@ -44,6 +44,13 @@ export interface DocumentContext {
   gcsUri?: string;
 }
 
+/**
+ * Identitas pemilik sesi.
+ * - 'device': sesi anonim, ownerId = deviceId dari localStorage
+ * - 'user': sesi terautentikasi, ownerId = Firebase UID
+ */
+export type OwnerType = 'device' | 'user';
+
 export interface Session {
   sessionId: string;
   profileType: ProfileType;
@@ -57,6 +64,18 @@ export interface Session {
   startedAt: string;
   endedAt?: string;
   summary?: SummaryPayload;
+
+  // --- Multi-conversation fields ---
+  /** Diskriminator pemilik sesi (device vs user) */
+  ownerType: OwnerType;
+  /** deviceId untuk anonim, atau Firebase UID untuk user terautentikasi */
+  ownerId: string;
+  /** Auto-generated dari first user message (40 char) atau di-rename user */
+  title?: string;
+  /** Soft delete penanda — sesi tidak muncul di list tapi tidak dihapus dari DB */
+  isArchived?: boolean;
+  /** ISO string; di-update setiap kali ada message baru, untuk sort di sidebar */
+  updatedAt: string;
 }
 
 // --- Payload types (structured outputs from Gemini) ---

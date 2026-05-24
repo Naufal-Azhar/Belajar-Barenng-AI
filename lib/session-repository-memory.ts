@@ -7,8 +7,10 @@ import type {
   Message,
   ProfileType,
   SummaryPayload,
+  OwnerType,
 } from './types';
-import type { SessionRepository } from './session-repository';
+import type { SessionRepository, CreateSessionInput } from './session-repository';
+import { normalizeSession } from './session-repository';
 
 const STORE_PATH = join(process.cwd(), '.dev-sessions.json');
 
@@ -34,25 +36,33 @@ function saveStore(data: StoreData): void {
 
 /**
  * In-memory session repository yang persist ke file agar survive HMR restart.
+ * Mendukung mode test: kalau persistOnDisk=false, tidak baca/tulis file.
  */
 export class InMemorySessionRepository implements SessionRepository {
   private store: StoreData;
+  private persistOnDisk: boolean;
 
-  constructor() {
-    this.store = loadStore();
+  constructor(opts: { persistOnDisk?: boolean } = {}) {
+    this.persistOnDisk = opts.persistOnDisk ?? true;
+    this.store = this.persistOnDisk ? loadStore() : { sessions: {}, messages: {} };
   }
 
   private persist() {
-    saveStore(this.store);
+    if (this.persistOnDisk) saveStore(this.store);
   }
 
-  async create(input: { profileType: ProfileType }): Promise<Session> {
+  async create(input: CreateSessionInput): Promise<Session> {
     const sessionId = randomUUID();
+    const now = new Date().toISOString();
     const session: Session = {
       sessionId,
       profileType: input.profileType,
       currentMode: 'explainer',
-      startedAt: new Date().toISOString(),
+      startedAt: now,
+      ownerType: input.ownerType,
+      ownerId: input.ownerId,
+      updatedAt: now,
+      isArchived: false,
     };
     this.store.sessions[sessionId] = session;
     this.store.messages[sessionId] = [];
@@ -61,13 +71,14 @@ export class InMemorySessionRepository implements SessionRepository {
   }
 
   async get(sessionId: string): Promise<Session | null> {
-    return this.store.sessions[sessionId] ?? null;
+    const raw = this.store.sessions[sessionId];
+    return raw ? normalizeSession(raw) : null;
   }
 
   async update(sessionId: string, patch: Partial<Session>): Promise<void> {
     const session = this.store.sessions[sessionId];
     if (!session) return;
-    Object.assign(session, patch);
+    Object.assign(session, patch, { updatedAt: new Date().toISOString() });
     this.persist();
   }
 
@@ -75,6 +86,7 @@ export class InMemorySessionRepository implements SessionRepository {
     const session = this.store.sessions[sessionId];
     if (!session) return;
     session.documentContext = ctx;
+    session.updatedAt = new Date().toISOString();
     this.persist();
   }
 
@@ -93,8 +105,58 @@ export class InMemorySessionRepository implements SessionRepository {
   async saveSummary(sessionId: string, summary: SummaryPayload): Promise<void> {
     const session = this.store.sessions[sessionId];
     if (!session) return;
+    const now = new Date().toISOString();
     (session as any).summary = summary;
-    session.endedAt = new Date().toISOString();
+    session.endedAt = now;
+    session.updatedAt = now;
     this.persist();
+  }
+
+  // --- Multi-conversation methods ---
+
+  async listByOwner(ownerType: OwnerType, ownerId: string): Promise<Session[]> {
+    const all = Object.values(this.store.sessions).map((raw) => normalizeSession(raw));
+    return all
+      .filter((s) => s.ownerType === ownerType && s.ownerId === ownerId && !s.isArchived)
+      .sort((a, b) => b.updatedAt.localeCompare(a.updatedAt));
+  }
+
+  async updateTitle(sessionId: string, title: string): Promise<void> {
+    const session = this.store.sessions[sessionId];
+    if (!session) return;
+    session.title = title;
+    session.updatedAt = new Date().toISOString();
+    this.persist();
+  }
+
+  async archive(sessionId: string): Promise<void> {
+    const session = this.store.sessions[sessionId];
+    if (!session) return;
+    session.isArchived = true;
+    session.updatedAt = new Date().toISOString();
+    this.persist();
+  }
+
+  async touch(sessionId: string): Promise<void> {
+    const session = this.store.sessions[sessionId];
+    if (!session) return;
+    session.updatedAt = new Date().toISOString();
+    this.persist();
+  }
+
+  async migrateOwner(fromDeviceId: string, toUserId: string): Promise<number> {
+    let migrated = 0;
+    const now = new Date().toISOString();
+    for (const session of Object.values(this.store.sessions)) {
+      const normalized = normalizeSession(session);
+      if (normalized.ownerType === 'device' && normalized.ownerId === fromDeviceId) {
+        session.ownerType = 'user';
+        session.ownerId = toUserId;
+        session.updatedAt = now;
+        migrated++;
+      }
+    }
+    if (migrated > 0) this.persist();
+    return migrated;
   }
 }

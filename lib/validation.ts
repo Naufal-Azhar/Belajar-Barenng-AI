@@ -69,6 +69,11 @@ export const summaryBodySchema = z.object({
   sessionId: z.string().min(1),
 });
 
+// PATCH /api/sessions/:id body — rename session
+export const updateSessionTitleSchema = z.object({
+  title: z.string().min(1).max(100),
+});
+
 // --- ASRM schemas ---
 
 export const extractBodySchema = z.object({

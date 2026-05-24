@@ -76,14 +76,17 @@ export default function ReviewPage() {
   const handleCrossMode = async () => {
     if (!crossMode || !currentCard) return;
     // Create session and navigate to chat
-    const res = await fetch('/api/session', {
+    const res = await fetch('/api/sessions', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Device-Id': getDeviceId(),
+      },
       body: JSON.stringify({ profileType: 'mahasiswa' }),
     });
     if (res.ok) {
       const data = await res.json();
-      localStorage.setItem('belajar.sessionId', data.sessionId);
+      localStorage.setItem('belajar.activeSessionId', data.sessionId);
       localStorage.setItem('belajar.crossMode', JSON.stringify({
         mode: crossMode.mode,
         concept: crossMode.concept,

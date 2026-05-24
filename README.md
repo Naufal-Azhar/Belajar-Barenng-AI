@@ -136,6 +136,47 @@ deploy/
 9. **Session Summary** — Ringkasan akhir sesi belajar
 10. **Cloud Storage** — File upload di-persist ke GCS
 11. **Tanpa Registrasi** — Langsung pakai, zero friction
+12. **Multi-Conversation** — Sidebar daftar sesi (gaya Claude/NotebookLM): bikin sesi baru, buka sesi lama, rename, hapus. Sesi tersimpan per-device, otomatis judul dari pesan pertama.
+
+## 🗂️ Multi-Conversation Architecture
+
+Semua sesi belajar tersimpan di Firestore (atau in-memory store saat dev) dengan
+field `ownerType: 'device' | 'user'` dan `ownerId` yang otomatis di-resolve dari
+header request.
+
+```
+[Browser]
+  │  X-Device-Id: <uuid> (anonim, current)
+  │  Authorization: Bearer <token> (post-hackathon, optional)
+  ▼
+[Auth Middleware lib/auth-server.ts]
+  └─ resolveOwner() → { ownerType, ownerId }
+       │
+       ▼
+[/api/sessions]                 GET (list) | POST (create)
+[/api/sessions/:id]             GET | PATCH (rename) | DELETE (soft archive)
+[/api/sessions/migrate]         (planned: claim deviceId sessions to userId)
+       │
+       ▼
+[SessionRepository]            listByOwner | updateTitle | archive | touch | migrateOwner
+       │
+       ▼
+[Firestore: sessions/*]        ownerType, ownerId, title, isArchived, updatedAt
+```
+
+**URL Pattern**: `/chat?sessionId=xxx` — query param drives mana sesi yang di-load.
+LocalStorage `belajar.activeSessionId` cuma untuk auto-resume saat refresh.
+
+**Auto-title**: 40 karakter pertama dari pesan user pertama (sanitized).
+Bisa di-rename inline lewat sidebar (double-click atau menu ⋯).
+
+**Soft delete**: `DELETE /api/sessions/:id` set `isArchived: true`, sesi tetap di
+DB tapi hilang dari list. Tidak ada UI undo (sesi dianggap permanen di-hapus dari
+perspektif user).
+
+**Owner isolation**: setiap request ke `/api/sessions/*` di-filter by ownerId.
+Cross-owner access return 403. Sesi legacy tanpa `ownerId` diberi default
+`ownerType:'device', ownerId:'legacy'` — tidak muncul di list user manapun.
 
 ---
 
