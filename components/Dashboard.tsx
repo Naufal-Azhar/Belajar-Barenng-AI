@@ -14,11 +14,6 @@ interface DashboardProps {
   topSlot?: React.ReactNode;
 }
 
-const profileLabel: Record<Session['profileType'], string> = {
-  mahasiswa: 'Mahasiswa',
-  sma: 'SMA',
-};
-
 const modeLabel: Record<Session['currentMode'], string> = {
   explainer: 'Penjelas',
   socratic: 'Sokratik',
@@ -139,10 +134,6 @@ export default function Dashboard({ sessions, isLoading = false, error, onNewSes
                   )}
                 </div>
                 <div className="flex items-center gap-2 flex-wrap text-caption">
-                  <span className="px-1.5 py-0.5 rounded bg-primary/10 text-primary">
-                    {profileLabel[session.profileType]}
-                  </span>
-                  <span className="text-muted-soft">·</span>
                   <span className="text-muted">{modeLabel[session.currentMode]}</span>
                   <span className="text-muted-soft">·</span>
                   <span className="text-muted-soft">{formatRelative(session.updatedAt)}</span>

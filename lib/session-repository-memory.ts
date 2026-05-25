@@ -5,7 +5,6 @@ import type {
   Session,
   DocumentContext,
   Message,
-  ProfileType,
   SummaryPayload,
   OwnerType,
 } from './types';
@@ -56,7 +55,6 @@ export class InMemorySessionRepository implements SessionRepository {
     const now = new Date().toISOString();
     const session: Session = {
       sessionId,
-      profileType: input.profileType,
       currentMode: 'explainer',
       startedAt: now,
       ownerType: input.ownerType,

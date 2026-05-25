@@ -50,16 +50,21 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const owner = await resolveOwner(request);
-    const body = await request.json();
+    // Body parsing: support empty body atau body dengan field deprecated
+    let body: unknown = {};
+    try {
+      body = await request.json();
+    } catch {
+      // Body kosong → fine, schema sudah toleran
+    }
     const parsed = createSessionBodySchema.safeParse(body);
 
     if (!parsed.success) {
-      return Response.json({ error: 'Profil tidak valid' }, { status: 400 });
+      return Response.json({ error: 'Request tidak valid' }, { status: 400 });
     }
 
     const repo = getSessionRepository();
     const session = await repo.create({
-      profileType: parsed.data.profileType,
       ownerType: owner.ownerType,
       ownerId: owner.ownerId,
     });

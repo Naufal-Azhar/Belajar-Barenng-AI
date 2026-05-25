@@ -7,13 +7,11 @@ import * as fc from 'fast-check';
 import { buildSystemPrompt } from '@/lib/prompt-builder';
 import { FC_DEFAULTS } from '../helpers/fast-check-config';
 import type {
-  ProfileType,
   LearningMode,
   DocumentContext,
   MaterialMimeType,
 } from '@/lib/types';
 
-const PROFILES: ProfileType[] = ['mahasiswa', 'sma'];
 const MODES: LearningMode[] = ['explainer', 'socratic', 'quiz', 'latihan'];
 const MIMES: MaterialMimeType[] = [
   'application/pdf',
@@ -35,7 +33,6 @@ const docContextArb: fc.Arbitrary<DocumentContext> = fc.record({
   uploadedAt: fc.constant(new Date().toISOString()),
 });
 
-const profileArb = fc.constantFrom(...PROFILES);
 const modeArb = fc.constantFrom(...MODES);
 const topicArb = fc.option(fc.string({ minLength: 0, maxLength: 60 }), { nil: undefined });
 
@@ -46,9 +43,8 @@ const ZIP_SIG = 'PK\x03\x04';
 describe('Property 19: Token-saving invariant — no raw bytes in prompts', () => {
   it('prompt contains compiledMarkdown but never raw PDF/DOCX bytes', () => {
     fc.assert(
-      fc.property(profileArb, modeArb, docContextArb, topicArb, (profile, mode, ctx, topic) => {
+      fc.property(modeArb, docContextArb, topicArb, (mode, ctx, topic) => {
         const prompt = buildSystemPrompt({
-          profile,
           mode,
           documentContext: ctx,
           topic: topic as string | undefined,
@@ -70,9 +66,8 @@ describe('Property 19: Token-saving invariant — no raw bytes in prompts', () =
 
   it('prompt without documentContext stays bytes-free as well', () => {
     fc.assert(
-      fc.property(profileArb, modeArb, topicArb, (profile, mode, topic) => {
+      fc.property(modeArb, topicArb, (mode, topic) => {
         const prompt = buildSystemPrompt({
-          profile,
           mode,
           topic: topic as string | undefined,
         });

@@ -65,9 +65,7 @@ export default function ChatPage() {
 
   const handleNewSession = async () => {
     try {
-      // Inherit profileType dari session aktif kalau ada, fallback ke 'mahasiswa'
-      const profileType = session?.profileType ?? 'mahasiswa';
-      const created = await createSession(profileType);
+      const created = await createSession();
       router.push(`/chat?sessionId=${created.sessionId}`, { scroll: false });
       setMobileSidebarOpen(false);
     } catch (err) {

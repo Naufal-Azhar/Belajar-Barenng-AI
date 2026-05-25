@@ -3,24 +3,21 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { containerVariants, itemVariants } from '@/lib/animations';
-import type { ProfileType } from '@/lib/types';
 import LoadingCat from './LoadingCat';
 
 interface Props {
-  onStart: (profileType: ProfileType) => Promise<void>;
+  onStart: () => Promise<void>;
 }
 
 export default function OnboardingScreen({ onStart }: Props) {
-  const [selected, setSelected] = useState<ProfileType | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleStart = async () => {
-    if (!selected) return;
     setLoading(true);
     setError(null);
     try {
-      await onStart(selected);
+      await onStart();
     } catch {
       setError('Gagal memulai sesi. Coba lagi.');
     } finally {
@@ -78,47 +75,12 @@ export default function OnboardingScreen({ onStart }: Props) {
           className="text-body-md text-body mb-6 sm:mb-10 max-w-sm"
         >
           Teman belajar personal yang sabar, nggak pernah nge-judge,
-          dan selalu siap bantu kamu paham.
+          dan selalu siap bantu kamu paham. Cocok buat pelajar SMA, mahasiswa,
+          maupun pembelajar mandiri.
         </motion.p>
 
-        {/* ── Section pilih jenjang ── */}
+        {/* ── CTA: single Mulai Belajar button ── */}
         <motion.div variants={itemVariants}>
-          <p className="text-caption-upper uppercase tracking-wider text-muted mb-4 text-xs">
-            Pilih profil kamu
-          </p>
-
-          <div className="mb-6 grid grid-cols-2 gap-3 max-w-sm">
-            <motion.button
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => setSelected('sma')}
-              className={`rounded-lg p-4 sm:p-xl-space text-left transition-all duration-200 border ${
-                selected === 'sma'
-                  ? 'border-primary bg-canvas shadow-subtle'
-                  : 'border-hairline bg-surface-card hover:border-hairline-soft'
-              }`}
-            >
-              <div className="mb-2 text-3xl">🎒</div>
-              <div className="font-sans text-title-sm text-ink">Pelajar SMA</div>
-              <div className="mt-0.5 text-body-sm text-muted">Kelas X – XII</div>
-            </motion.button>
-
-            <motion.button
-              whileHover={{ scale: 1.02, y: -2 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => setSelected('mahasiswa')}
-              className={`rounded-lg p-4 sm:p-xl-space text-left transition-all duration-200 border ${
-                selected === 'mahasiswa'
-                  ? 'border-primary bg-canvas shadow-subtle'
-                  : 'border-hairline bg-surface-card hover:border-hairline-soft'
-              }`}
-            >
-              <div className="mb-2 text-3xl">🎓</div>
-              <div className="font-sans text-title-sm text-ink">Mahasiswa</div>
-              <div className="mt-0.5 text-body-sm text-muted">S1 / D3 / D4</div>
-            </motion.button>
-          </div>
-
           {error && (
             <motion.p
               initial={{ opacity: 0, y: -10 }}
@@ -131,10 +93,10 @@ export default function OnboardingScreen({ onStart }: Props) {
 
           <motion.button
             onClick={handleStart}
-            disabled={!selected || loading}
+            disabled={loading}
             className="btn-primary max-w-sm w-full"
-            whileHover={!loading && selected ? { scale: 1.01 } : {}}
-            whileTap={!loading && selected ? { scale: 0.97 } : {}}
+            whileHover={!loading ? { scale: 1.01 } : {}}
+            whileTap={!loading ? { scale: 0.97 } : {}}
           >
             {loading ? (
               /* EDIT CAPTION: Onboarding start button */

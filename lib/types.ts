@@ -1,6 +1,5 @@
 // Domain types for BelajarBareng AI
 
-export type ProfileType = 'mahasiswa' | 'sma';
 export type LearningMode = 'explainer' | 'socratic' | 'quiz' | 'latihan';
 export type Role = 'user' | 'ai';
 
@@ -53,7 +52,6 @@ export type OwnerType = 'device' | 'user';
 
 export interface Session {
   sessionId: string;
-  profileType: ProfileType;
   topic?: string;
   /** Layout_Router input — halaman /chat memilih layout berdasarkan field ini */
   currentMode: LearningMode;

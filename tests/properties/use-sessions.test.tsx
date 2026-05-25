@@ -94,7 +94,7 @@ describe('useSessions hook', () => {
 
     let created;
     await act(async () => {
-      created = await result.current.createSession('mahasiswa');
+      created = await result.current.createSession();
     });
 
     expect(result.current.sessions).toHaveLength(1);

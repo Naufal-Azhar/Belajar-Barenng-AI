@@ -139,3 +139,231 @@ Sebelumnya app ini hanya support 1 sesi aktif per browser (single-slot localStor
 
 ### Modified Files (28 file)
 Lihat git log untuk daftar lengkap. Highlight: `lib/types.ts`, `lib/session-repository.ts`, `app/api/sessions/`, `components/Sidebar.tsx`, `components/Dashboard.tsx`, `hooks/useSessions.ts`.
+
+
+
+## ⏳ Yang BELUM Dikerjakan (Phase 5: Firebase Auth — ditunda)
+
+> Status: **deferred to post-hackathon**. Tasks 13-16 sudah didesain di plan, tinggal eksekusi.
+> Semua kode bisa kompil tanpa task ini — app jalan dalam mode anonim (deviceId).
+> Kalau mau aktifkan: setup Firebase Console (~10 menit) + saya kerjakan kode (~3-4 jam).
+
+### Setup Eksternal yang Wajib Dilakukan User Sebelum Mulai
+
+1. **Buat Firebase project** di [console.firebase.google.com](https://console.firebase.google.com) (gratis, 5 menit)
+2. **Enable Google Sign-in** di Authentication → Sign-in method → Google → Enable
+3. **Tambah Web app** di Project Settings → General → Your apps → Add Web app
+4. **Copy 4 config keys** ke `.env.local` (template sudah ada di `.env.example`):
+   - `NEXT_PUBLIC_FIREBASE_API_KEY`
+   - `NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN`
+   - `NEXT_PUBLIC_FIREBASE_PROJECT_ID`
+   - `NEXT_PUBLIC_FIREBASE_APP_ID`
+5. **Generate service account JSON** di Project Settings → Service Accounts → Generate new private key. Simpan sebagai `service-account-key.json` di root project (sudah masuk `.gitignore`).
+6. **Authorize domain** di Authentication → Settings → Authorized domains. Tambah domain Cloud Run / preview kalau deploy.
+
+---
+
+### Task 13 — Firebase Auth Client Setup + AuthContext
+
+**Tujuan**: Setup auth client-side. User bisa klik "Login dengan Google" → popup Google OAuth → app dapat ID token + user info (email, displayName, avatar).
+
+**Yang dibikin**:
+- Install package: `npm install firebase`
+- File baru `lib/firebase-client.ts`:
+  - `initializeApp()` dari env vars
+  - Export `auth` instance
+- File baru `contexts/AuthContext.tsx`:
+  - `<AuthProvider>` wrapper untuk root layout
+  - Expose state: `{ user: User | null, idToken: string | null, signInWithGoogle: () => Promise<void>, signOut: () => Promise<void>, isLoading: boolean }`
+  - Listener `onAuthStateChanged` untuk sync state otomatis
+  - Token cached + auto-refresh setiap 55 menit
+- File baru `lib/api-client.ts`:
+  - `authedFetch(url, opts)` helper
+  - Logic: kalau ada `idToken` → kirim `Authorization: Bearer <token>`, else fallback ke `X-Device-Id: <uuid>`
+- Modifikasi:
+  - `app/layout.tsx` — wrap `<children>` dengan `<AuthProvider>`
+  - `hooks/useSessions.ts` — replace `fetch()` calls dengan `authedFetch()`
+  - `hooks/useSession.ts` — replace `fetch()` calls dengan `authedFetch()`
+
+**Tests**: `tests/properties/api-client.test.ts` (mock auth state, verify header switching)
+
+**Demo**: Tombol login muncul di pojok app, klik → popup Google, sukses → user info terlihat di console / React DevTools.
+
+**Estimasi**: ~1.5 jam coding + 30 menit testing
+
+---
+
+### Task 14 — Firebase Admin SDK + Auth Middleware (server)
+
+**Tujuan**: Server bisa verify ID token dari client, jadi tahu "ini request dari user UID xxx" untuk filter data Firestore.
+
+**Yang dibikin**:
+- Install package: `npm install firebase-admin`
+- File baru `lib/firebase-admin.ts`:
+  - Initialize Firebase Admin SDK pakai service account JSON
+  - Di Cloud Run: pakai default service account via Application Default Credentials
+  - Di local dev: pakai file `service-account-key.json` (sudah di-gitignore)
+- Modifikasi `lib/auth-server.ts` — `resolveOwner(req)` jadi:
+  ```ts
+  async function resolveOwner(req): Promise<Owner> {
+    const authHeader = req.headers.get('authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      try {
+        const decoded = await firebaseAdmin.auth().verifyIdToken(authHeader.slice(7));
+        return { ownerType: 'user', ownerId: decoded.uid };
+      } catch {
+        // Fall through to deviceId
+      }
+    }
+    const deviceId = req.headers.get('x-device-id');
+    if (deviceId) return { ownerType: 'device', ownerId: deviceId };
+    throw new UnauthorizedError();
+  }
+  ```
+- Tidak butuh modifikasi handler API — `resolveOwner` sudah dipanggil di semua endpoint, hanya behavior-nya yang berubah
+
+**Tests**: `tests/properties/auth-server.test.ts` (mock token verification, verify header parsing, fallback logic)
+
+**Demo**: Login di client, network tab show `Authorization: Bearer eyJhb...` header → server logs show resolved `userId` (Firebase UID) instead of deviceId.
+
+**Estimasi**: ~1 jam coding + 30 menit testing
+
+---
+
+### Task 15 — Login Button di Sidebar + Migrasi Sesi Anonim
+
+**Tujuan**: User bisa login lewat tombol di sidebar footer. Sesi-sesi anonim yang udah dibuat sebelumnya otomatis "diklaim" ke akun user setelah login.
+
+**Yang dibikin**:
+- Komponen `<LoginSlot />` baru, di-pass sebagai `loginSlot` prop ke `<Sidebar>`:
+  - Anonymous: tombol "Login dengan Google" + icon
+  - Logged-in: avatar + email + tombol "Keluar" (Logout)
+- File baru `app/api/sessions/migrate/route.ts`:
+  - `POST` body: `{ deviceId: string }`
+  - Auth: caller HARUS sudah login (ownerType === 'user')
+  - Logic: panggil `repo.migrateOwner(deviceId, callerUid)`
+  - Response: `{ migrated: N }` (jumlah sesi yang dipindah)
+- Modal konfirmasi sebelum migrate: **"Sambungkan {N} sesi anonim ke akun {email}?"** dengan tombol [Sambungkan] [Lewati]
+- Wire di `app/chat/page.tsx`:
+  - On login: cek apakah ada sesi `ownerType:'device'` → kalau ada, tampilkan modal
+  - User klik "Sambungkan" → POST `/api/sessions/migrate` → sukses → refresh sidebar
+
+**Tests**: `tests/properties/api-sessions-migrate.test.ts` (idempotency, verify only callee's deviceId sessions migrated, cross-user safety)
+
+**Demo**: Buat 3 sesi anonim → klik Login → popup Google → sukses → modal "Sambungkan 3 sesi?" muncul → klik Sambungkan → sidebar refresh, semua 3 sesi sekarang `ownerType:'user'` di backend.
+
+**Estimasi**: ~1.5 jam coding + 30 menit testing
+
+---
+
+### Task 16 — Multi-Device Sync Verification + Login State UI
+
+**Tujuan**: Verifikasi end-to-end bahwa sesi user sync antar device + UX polish untuk indikator login state.
+
+**Yang dibikin**:
+- Indikator UI di sidebar:
+  - Cloud icon ☁️ + "Tersinkronisasi" subtle text saat user logged-in
+  - Hidden saat anonymous
+- Toast notification "Tersinkronisasi ✓" setelah login berhasil (~3 detik)
+- Cache invalidation di `useSessions`:
+  - On `idToken` change (login/logout) → trigger `refresh()` otomatis
+  - Anonymous → user transition: list berubah dari deviceId-bound jadi userId-bound
+  - User → anonymous (logout) transition: list balik ke deviceId-bound
+- Edge case handling:
+  - Browser B (device baru) login dengan akun yang sama → fetch sesi userId-bound (sesi yang udah di-migrate dari Browser A muncul)
+  - Tapi sesi anonim Browser A yang BELUM di-migrate tetap terisolasi di Browser A's deviceId
+  - Sesi anonim Browser B (sebelum login) tidak ke-mix sama sesi user Browser A
+
+**Tests**: Manual cross-browser test (Playwright kalau ada waktu), atau dokumentasi langkah test:
+1. Browser A: login akun X → buat sesi "Topic A"
+2. Browser B (incognito): buka app → login akun X → cek sidebar → "Topic A" muncul
+3. Browser B: buat sesi anonim sebelum login → "Topic B" — verify bahwa "Topic B" terikat deviceId Browser B, tidak muncul di Browser A
+4. Browser B: login → modal migrate → klaim "Topic B" → sekarang Browser A reload → "Topic B" muncul juga
+
+**Demo**: 2 device berbeda pakai akun Google yang sama, sesi sync otomatis lewat Firestore.
+
+**Estimasi**: ~1 jam coding + 1 jam manual testing
+
+---
+
+### Total Estimasi Phase 5: ~6-7 jam dev work
+
+Hasil akhir kalau Phase 5 dikerjakan:
+- ✅ Login Google dengan 1 klik (gratis tier Firebase Auth)
+- ✅ Sesi sync antar device (laptop ↔ HP ↔ tablet)
+- ✅ Migrasi seamless dari anonim ke akun
+- ✅ User bisa logout, sesi user-bound sembunyi sampai login lagi
+- ✅ Anti-spam: rate-limit per `userId` di future task
+- ✅ Production-ready dengan zero biaya tambahan (Firebase Auth gratis untuk Google sign-in unlimited)
+
+### Catatan Penting
+
+1. **Firebase Auth gratis** untuk Google sign-in & email/password sign-in. Yang berbayar hanya Phone Auth (SMS). Kita tidak perlu Phone Auth.
+2. **Tidak butuh database baru** — Firestore yang sudah ada cukup. Auth user info hanya butuh `userId` (UID) yang dikasih Firebase Auth → di-store sebagai field di Session document.
+3. **Kompatibilitas**: kode existing tetap jalan tanpa Firebase Auth setup. Kalau env vars Firebase kosong, app gracefully fall back ke deviceId mode.
+4. **Service account JSON aman**: sudah di-gitignore (`service-account-key.json`). Untuk production Cloud Run, pakai default service account via ADC — tidak perlu file JSON di filesystem.
+
+
+
+## update 25/5/2026 (Senin) — Universal Profile
+
+> *Hapus pemisahan profil SMA vs Mahasiswa, jadikan satu profil universal*
+
+---
+
+### Konteks
+Onboarding sebelumnya memaksa user pilih antara "Pelajar SMA" atau "Mahasiswa" sebelum bisa mulai. Pemisahan ini terasa rigid (tidak inklusif untuk pembelajar mandiri / profesional) dan menambah friction. Setelah refactor, single button "Mulai Belajar →" langsung mulai sesi tanpa minta jenjang.
+
+### Yang Dikerjain (9 task — 100%)
+
+#### Phase 1: Soften schema (Task 1-2)
+- **Task 1**: Field `profileType` di-mark optional di seluruh layer (Session, validation, repository) — non-breaking transition.
+- **Task 2**: `PROFILE_INSTRUCTION` map dihapus dari prompt builder, ganti dengan satu `UNIVERSAL_LEARNER_INSTRUCTION` const yang netral untuk semua jenjang.
+
+#### Phase 2: UI cleanup (Task 3-4)
+- **Task 3**: `OnboardingScreen.tsx` di-simplify — hapus state `selected`, hapus 2-button picker (Pelajar SMA / Mahasiswa), tinggal satu tombol "Mulai Belajar →" yang langsung enabled.
+- **Task 4**: Dashboard card hapus badge profil (Mahasiswa/SMA). Sekarang card hanya tampil judul + mode + relative time.
+
+#### Phase 3: API + hooks (Task 5-6)
+- **Task 5**: `useSessions.createSession()` & `useSession.createSession()` jadi no-arg. Body POST `/api/sessions` jadi `{}`.
+- **Task 6**: `POST /api/sessions` tidak lagi parse body; `buildSystemPrompt()` di `/api/chat` & `/api/summary` dipanggil tanpa arg `profile`.
+
+#### Phase 4: Data migration (Task 7)
+- **Task 7**: Bikin 2 migration script di `deploy/`:
+  - `migrate-dev-sessions.ts` — cleanup `.dev-sessions.json` (in-memory store) dengan auto-backup ke `.dev-sessions.backup.json`. Idempotent.
+  - `migrate-remove-profile-type.ts` — cleanup Firestore `sessions/*` pakai `FieldValue.delete()` dalam batch (max 500 ops). Idempotent — doc tanpa field di-skip.
+  - Install `tsx@4.19.2` sebagai devDep, tambah scripts `npm run migrate:dev` & `npm run migrate:firestore`.
+  - Verified migrate:dev: Processed 3, Migrated 3, Errors 0. Re-run: Migrated 0 (idempotent confirmed).
+
+#### Phase 5: Final cleanup (Task 8-9)
+- **Task 8**: Hapus total `ProfileType` type alias, `profileTypeSchema`, field `profileType?` dari `Session`, semua import statements, dan semua test fixture references. `createSessionBodySchema` simplified jadi `z.object({}).passthrough()`. Test "returns 400 kalau profileType invalid" dihapus karena tidak relevan lagi.
+- **Task 9**: End-to-end verification + update PROGRES.md & README.md.
+
+### Hasil
+- **79/80 → 79 tests pass** (drop 1 test: "returns 400 kalau profileType invalid" — not relevant after refactor)
+- **TypeScript strict mode clean** (`npx tsc --noEmit` → no errors)
+- **Zero references** ke `ProfileType` / `profileType` / `'sma'` / `'mahasiswa'` di app code (sisa 8 references hanya di `deploy/migrate-*.ts` — correct, mereka pakai sebagai string key untuk migration)
+- **Backward compat untuk sesi lama**: Firestore docs yang sudah punya field `profileType` tetap bisa di-read (field tinggal diabaikan). Migration script tinggal dijalankan di prod kapan pun.
+- **Onboarding flow**: Single click → langsung create + redirect ke `/chat?sessionId=xxx`
+
+### Modified Files (26 file)
+- Domain: `lib/types.ts`, `lib/validation.ts`, `lib/prompt-builder.ts`
+- Repo: `lib/session-repository.ts`, `lib/session-repository-memory.ts`
+- API: `app/api/sessions/route.ts`, `app/api/chat/route.ts`, `app/api/summary/route.ts`
+- Hooks: `hooks/useSession.ts`, `hooks/useSessions.ts`
+- UI: `components/OnboardingScreen.tsx`, `components/Dashboard.tsx`
+- Pages: `app/page.tsx`, `app/chat/page.tsx`, `app/review/page.tsx`
+- Migration: `deploy/migrate-dev-sessions.ts`, `deploy/migrate-remove-profile-type.ts`
+- Config: `package.json` (+ tsx devDep, + 2 npm scripts)
+- Tests (7 file fixture cleanup): `session-repository.test.ts`, `api-sessions-list.test.ts`, `api-sessions-crud.test.ts`, `property-19-token-saving.test.ts`, `property-17-layout-router.test.tsx`, `sidebar.test.tsx`, `use-sessions.test.tsx`
+- Data: `.dev-sessions.json` (migrated, backup at `.dev-sessions.backup.json`)
+- Docs: `README.md`, `PROGRES.md`
+
+### Cara Jalanin Migration di Production (Future)
+```bash
+# Setelah deploy code baru, jalanin sekali:
+GOOGLE_CLOUD_PROJECT=<your-project> \
+GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account.json \
+npm run migrate:firestore
+```
+Output: `Processed: N, Migrated: M, Errors: 0`. Idempotent — aman dijalankan ulang.

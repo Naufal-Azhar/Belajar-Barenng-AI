@@ -37,9 +37,9 @@ describe('GET /api/sessions', () => {
   });
 
   it('returns hanya sesi milik device tertentu (isolation)', async () => {
-    await repo.create({ profileType: 'mahasiswa', ownerType: 'device', ownerId: 'device-A' });
-    await repo.create({ profileType: 'sma', ownerType: 'device', ownerId: 'device-A' });
-    await repo.create({ profileType: 'mahasiswa', ownerType: 'device', ownerId: 'device-B' });
+    await repo.create({ ownerType: 'device', ownerId: 'device-A' });
+    await repo.create({ ownerType: 'device', ownerId: 'device-A' });
+    await repo.create({ ownerType: 'device', ownerId: 'device-B' });
 
     const resA = await GET(makeRequest({ 'x-device-id': 'device-A' }) as any);
     const bodyA = await resA.json();
@@ -52,8 +52,8 @@ describe('GET /api/sessions', () => {
   });
 
   it('exclude sesi yang sudah di-archive', async () => {
-    const s1 = await repo.create({ profileType: 'mahasiswa', ownerType: 'device', ownerId: 'A' });
-    await repo.create({ profileType: 'sma', ownerType: 'device', ownerId: 'A' });
+    const s1 = await repo.create({ ownerType: 'device', ownerId: 'A' });
+    await repo.create({ ownerType: 'device', ownerId: 'A' });
     await repo.archive(s1.sessionId);
 
     const res = await GET(makeRequest({ 'x-device-id': 'A' }) as any);
@@ -63,7 +63,7 @@ describe('GET /api/sessions', () => {
   });
 
   it('strips compiledMarkdown dari documentContext (light response)', async () => {
-    const s = await repo.create({ profileType: 'mahasiswa', ownerType: 'device', ownerId: 'A' });
+    const s = await repo.create({ ownerType: 'device', ownerId: 'A' });
     await repo.setDocumentContext(s.sessionId, {
       fileName: 'test.pdf',
       sizeBytes: 1024,
@@ -97,20 +97,13 @@ describe('POST /api/sessions', () => {
   }
 
   it('returns 400 kalau X-Device-Id tidak ada', async () => {
-    const res = await POST(makePostRequest({ profileType: 'mahasiswa' }) as any);
-    expect(res.status).toBe(400);
-  });
-
-  it('returns 400 kalau profileType invalid', async () => {
-    const res = await POST(
-      makePostRequest({ profileType: 'invalid' }, { 'x-device-id': 'A' }) as any
-    );
+    const res = await POST(makePostRequest({}) as any);
     expect(res.status).toBe(400);
   });
 
   it('create session dengan ownerType=device + ownerId=deviceId', async () => {
     const res = await POST(
-      makePostRequest({ profileType: 'mahasiswa' }, { 'x-device-id': 'my-device' }) as any
+      makePostRequest({}, { 'x-device-id': 'my-device' }) as any
     );
     expect(res.status).toBe(201);
     const body = await res.json();
@@ -126,7 +119,7 @@ describe('POST /api/sessions', () => {
 
   it('session yang baru dibuat muncul di GET berikutnya', async () => {
     const createRes = await POST(
-      makePostRequest({ profileType: 'sma' }, { 'x-device-id': 'A' }) as any
+      makePostRequest({}, { 'x-device-id': 'A' }) as any
     );
     const created = await createRes.json();
 

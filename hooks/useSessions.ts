@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { getDeviceId } from '@/lib/device-id';
-import type { Session, ProfileType } from '@/lib/types';
+import type { Session } from '@/lib/types';
 
 interface UseSessionsState {
   sessions: Session[];
@@ -12,7 +12,7 @@ interface UseSessionsState {
 
 interface UseSessionsResult extends UseSessionsState {
   refresh: () => Promise<void>;
-  createSession: (profileType: ProfileType) => Promise<Session>;
+  createSession: () => Promise<Session>;
   deleteSession: (sessionId: string) => Promise<void>;
   renameSession: (sessionId: string, title: string) => Promise<void>;
 }
@@ -67,20 +67,19 @@ export function useSessions(): UseSessionsResult {
     };
   }, [fetchList]);
 
-  const createSession = useCallback(async (profileType: ProfileType): Promise<Session> => {
+  const createSession = useCallback(async (): Promise<Session> => {
     const res = await fetch('/api/sessions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         'X-Device-Id': getDeviceId(),
       },
-      body: JSON.stringify({ profileType }),
+      body: JSON.stringify({}),
     });
     if (!res.ok) throw new Error('Gagal membuat sesi');
     const data = await res.json();
     const newSession: Session = {
       sessionId: data.sessionId,
-      profileType,
       currentMode: data.currentMode,
       startedAt: data.startedAt,
       ownerType: data.ownerType,

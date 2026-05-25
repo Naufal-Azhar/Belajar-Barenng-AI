@@ -1,4 +1,4 @@
-import type { ProfileType, LearningMode, DocumentContext } from './types';
+import type { LearningMode, DocumentContext } from './types';
 
 const BASE_TONE = `Kamu adalah BelajarBareng AI, teman belajar personal yang sabar dan tidak pernah menghakimi. Kamu berbicara seperti kakak senior yang pintar dan relate. Gunakan bahasa Indonesia santai tapi informatif. Selalu ajak user untuk memahami, bukan sekedar menghafal.
 
@@ -15,14 +15,10 @@ const MODE_INSTRUCTION: Record<LearningMode, string> = {
     'Bimbing user step-by-step. Jangan langsung kasih jawaban sebelum user mencoba. Jawab dalam JSON terstruktur sesuai schema LatihanPayload: { "kind": "latihan", "question": "...", "steps": [{ "title": "...", "detail": "..." }] }.',
 };
 
-const PROFILE_INSTRUCTION: Record<ProfileType, string> = {
-  sma: 'User adalah pelajar SMA (15–18 tahun). Pakai kosakata dan analogi yang dekat dengan dunia anak SMA.',
-  mahasiswa:
-    'User adalah mahasiswa (18–24 tahun). Pakai kosakata dan analogi yang dekat dengan kehidupan mahasiswa.',
-};
+const UNIVERSAL_LEARNER_INSTRUCTION =
+  'User adalah pelajar Indonesia (bisa SMA, mahasiswa, atau pembelajar mandiri). Gunakan bahasa santai dan analogi yang relate dengan kehidupan pelajar/mahasiswa Indonesia pada umumnya. Hindari jargon yang terlalu spesifik ke jenjang tertentu, dan sesuaikan kompleksitas dengan tingkat pertanyaan user.';
 
 export function buildSystemPrompt(args: {
-  profile: ProfileType;
   mode: LearningMode;
   documentContext?: DocumentContext;
   topic?: string;
@@ -30,7 +26,7 @@ export function buildSystemPrompt(args: {
   const parts: string[] = [
     BASE_TONE,
     MODE_INSTRUCTION[args.mode],
-    PROFILE_INSTRUCTION[args.profile],
+    UNIVERSAL_LEARNER_INSTRUCTION,
   ];
 
   if (args.documentContext?.compiledMarkdown) {
@@ -48,4 +44,4 @@ export function buildSystemPrompt(args: {
 export const BASE_TONE_GENERAL = `Kamu adalah BelajarBareng AI, teman belajar personal yang sabar dan tidak pernah menghakimi. Kamu berbicara seperti kakak senior yang pintar dan relate. Gunakan bahasa Indonesia santai tapi informatif. Jawab dengan natural dan ramah. Jangan output JSON.`;
 
 // Export constants for testing
-export { BASE_TONE, MODE_INSTRUCTION, PROFILE_INSTRUCTION };
+export { BASE_TONE, MODE_INSTRUCTION, UNIVERSAL_LEARNER_INSTRUCTION };

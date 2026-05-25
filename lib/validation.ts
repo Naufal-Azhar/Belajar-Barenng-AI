@@ -2,7 +2,6 @@ import { z } from 'zod';
 
 // --- Domain schemas ---
 
-export const profileTypeSchema = z.enum(['mahasiswa', 'sma']);
 export const learningModeSchema = z.enum(['explainer', 'socratic', 'quiz', 'latihan']);
 
 export const quizPayloadSchema = z.object({
@@ -55,9 +54,8 @@ export const summaryPayloadSchema = z.object({
 
 // --- Request body schemas ---
 
-export const createSessionBodySchema = z.object({
-  profileType: profileTypeSchema,
-});
+// POST /api/sessions tidak butuh body sekarang — sesi diciptakan dengan ownerType+ownerId saja
+export const createSessionBodySchema = z.object({}).passthrough();
 
 export const chatBodySchema = z.object({
   sessionId: z.string().min(1),

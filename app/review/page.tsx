@@ -82,7 +82,7 @@ export default function ReviewPage() {
         'Content-Type': 'application/json',
         'X-Device-Id': getDeviceId(),
       },
-      body: JSON.stringify({ profileType: 'mahasiswa' }),
+      body: JSON.stringify({}),
     });
     if (res.ok) {
       const data = await res.json();

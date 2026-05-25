@@ -7,7 +7,6 @@ import OnboardingScreen from '@/components/OnboardingScreen';
 import Dashboard from '@/components/Dashboard';
 import { useSessions } from '@/hooks/useSessions';
 import { getDeviceId } from '@/lib/device-id';
-import type { ProfileType } from '@/lib/types';
 
 interface MemoryStats {
   totalCards: number;
@@ -38,8 +37,8 @@ export default function HomePage() {
   // First-time user (no sessions yet) → onboarding flow
   const isFirstTime = !isLoading && sessions.length === 0;
 
-  const handleStart = async (profileType: ProfileType) => {
-    const created = await createSession(profileType);
+  const handleStart = async () => {
+    const created = await createSession();
     router.push(`/chat?sessionId=${created.sessionId}`);
   };
 
@@ -92,8 +91,8 @@ export default function HomePage() {
   if (showOnboarding) {
     return (
       <OnboardingScreen
-        onStart={async (profileType) => {
-          await handleStart(profileType);
+        onStart={async () => {
+          await handleStart();
           setShowOnboarding(false);
         }}
       />

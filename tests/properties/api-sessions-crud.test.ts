@@ -39,7 +39,7 @@ describe('/api/sessions/[sessionId]', () => {
     });
 
     it('returns 403 kalau owner berbeda', async () => {
-      const s = await repo.create({ profileType: 'mahasiswa', ownerType: 'device', ownerId: 'owner-A' });
+      const s = await repo.create({ ownerType: 'device', ownerId: 'owner-A' });
       const res = await GET(
         makeReq({ headers: { 'x-device-id': 'attacker-B' } }) as any,
         { params: { sessionId: s.sessionId } }
@@ -48,7 +48,7 @@ describe('/api/sessions/[sessionId]', () => {
     });
 
     it('returns session + messages untuk owner yang benar', async () => {
-      const s = await repo.create({ profileType: 'mahasiswa', ownerType: 'device', ownerId: 'A' });
+      const s = await repo.create({ ownerType: 'device', ownerId: 'A' });
       await repo.appendMessage(s.sessionId, {
         sessionId: s.sessionId,
         role: 'user',
@@ -69,7 +69,7 @@ describe('/api/sessions/[sessionId]', () => {
     });
 
     it('returns 404 untuk sesi yang sudah di-archive', async () => {
-      const s = await repo.create({ profileType: 'mahasiswa', ownerType: 'device', ownerId: 'A' });
+      const s = await repo.create({ ownerType: 'device', ownerId: 'A' });
       await repo.archive(s.sessionId);
 
       const res = await GET(
@@ -82,7 +82,7 @@ describe('/api/sessions/[sessionId]', () => {
 
   describe('PATCH', () => {
     it('rename title sesi yang dimiliki', async () => {
-      const s = await repo.create({ profileType: 'mahasiswa', ownerType: 'device', ownerId: 'A' });
+      const s = await repo.create({ ownerType: 'device', ownerId: 'A' });
 
       const res = await PATCH(
         makeReq({ method: 'PATCH', headers: { 'x-device-id': 'A' }, body: { title: 'Belajar Biologi' } }) as any,
@@ -95,7 +95,7 @@ describe('/api/sessions/[sessionId]', () => {
     });
 
     it('returns 403 kalau owner berbeda', async () => {
-      const s = await repo.create({ profileType: 'mahasiswa', ownerType: 'device', ownerId: 'A' });
+      const s = await repo.create({ ownerType: 'device', ownerId: 'A' });
 
       const res = await PATCH(
         makeReq({ method: 'PATCH', headers: { 'x-device-id': 'B' }, body: { title: 'Hack' } }) as any,
@@ -107,7 +107,7 @@ describe('/api/sessions/[sessionId]', () => {
     });
 
     it('returns 400 untuk title kosong', async () => {
-      const s = await repo.create({ profileType: 'mahasiswa', ownerType: 'device', ownerId: 'A' });
+      const s = await repo.create({ ownerType: 'device', ownerId: 'A' });
 
       const res = await PATCH(
         makeReq({ method: 'PATCH', headers: { 'x-device-id': 'A' }, body: { title: '' } }) as any,
@@ -117,7 +117,7 @@ describe('/api/sessions/[sessionId]', () => {
     });
 
     it('returns 400 untuk title > 100 char', async () => {
-      const s = await repo.create({ profileType: 'mahasiswa', ownerType: 'device', ownerId: 'A' });
+      const s = await repo.create({ ownerType: 'device', ownerId: 'A' });
 
       const res = await PATCH(
         makeReq({ method: 'PATCH', headers: { 'x-device-id': 'A' }, body: { title: 'x'.repeat(101) } }) as any,
@@ -129,7 +129,7 @@ describe('/api/sessions/[sessionId]', () => {
 
   describe('DELETE', () => {
     it('soft-archive sesi yang dimiliki', async () => {
-      const s = await repo.create({ profileType: 'mahasiswa', ownerType: 'device', ownerId: 'A' });
+      const s = await repo.create({ ownerType: 'device', ownerId: 'A' });
 
       const res = await DELETE(
         makeReq({ method: 'DELETE', headers: { 'x-device-id': 'A' } }) as any,
@@ -147,7 +147,7 @@ describe('/api/sessions/[sessionId]', () => {
     });
 
     it('returns 403 kalau owner berbeda', async () => {
-      const s = await repo.create({ profileType: 'mahasiswa', ownerType: 'device', ownerId: 'A' });
+      const s = await repo.create({ ownerType: 'device', ownerId: 'A' });
 
       const res = await DELETE(
         makeReq({ method: 'DELETE', headers: { 'x-device-id': 'B' } }) as any,

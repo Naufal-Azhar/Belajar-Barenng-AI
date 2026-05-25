@@ -92,7 +92,6 @@ export async function POST(request: NextRequest) {
     }));
 
     const systemPrompt = buildSystemPrompt({
-      profile: session.profileType,
       mode: activeMode,
       documentContext: session.documentContext,
       topic: session.topic,

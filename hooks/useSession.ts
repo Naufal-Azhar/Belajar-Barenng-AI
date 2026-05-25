@@ -165,14 +165,14 @@ export function useSession() {
   }, [effectiveSessionId]);
 
   const createSession = useCallback(
-    async (profileType: 'mahasiswa' | 'sma') => {
+    async () => {
       const res = await fetch('/api/sessions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'X-Device-Id': getDeviceId(),
         },
-        body: JSON.stringify({ profileType }),
+        body: JSON.stringify({}),
       });
 
       if (!res.ok) {
@@ -185,7 +185,6 @@ export function useSession() {
         type: 'SET_READY',
         session: {
           sessionId: data.sessionId,
-          profileType,
           currentMode: data.currentMode,
           startedAt: data.startedAt,
           ownerType: data.ownerType,

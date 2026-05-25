@@ -25,7 +25,6 @@ import type { Session } from '@/lib/types';
 
 const fakeSession: Session = {
   sessionId: 'test-session',
-  profileType: 'mahasiswa',
   currentMode: 'explainer',
   startedAt: new Date().toISOString(),
   ownerType: 'device',

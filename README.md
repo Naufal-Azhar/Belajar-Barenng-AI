@@ -2,7 +2,7 @@
 
 > *"Nggak ada lagi alasan nggak ngerti. Tanya aja."*
 
-Teman belajar personal berbasis AI untuk mahasiswa dan pelajar SMA Indonesia. Upload materi (PDF atau DOCX) atau ketik topik, lalu AI akan menjelaskan, membuat analogi, mengadakan kuis, dan menemani latihan soal — masing-masing dengan layout yang dirancang khusus per mode.
+Teman belajar personal berbasis AI untuk pelajar Indonesia (SMA, mahasiswa, atau pembelajar mandiri). Upload materi (PDF atau DOCX) atau ketik topik, lalu AI akan menjelaskan, membuat analogi, mengadakan kuis, dan menemani latihan soal — masing-masing dengan layout yang dirancang khusus per mode.
 
 ## 🚀 Quick Start
 

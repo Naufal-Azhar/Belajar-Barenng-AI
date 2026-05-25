@@ -40,7 +40,6 @@ export async function POST(request: NextRequest) {
       .join('\n');
 
     const systemPrompt = `${buildSystemPrompt({
-      profile: session.profileType,
       mode: session.currentMode,
       documentContext: session.documentContext,
       topic: session.topic,

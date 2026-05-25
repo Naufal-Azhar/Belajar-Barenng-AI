@@ -13,7 +13,6 @@ describe('SessionRepository — multi-conversation methods', () => {
   describe('create + listByOwner', () => {
     it('create session menyimpan ownerType + ownerId', async () => {
       const session = await repo.create({
-        profileType: 'mahasiswa',
         ownerType: 'device',
         ownerId: 'device-A',
       });
@@ -24,9 +23,9 @@ describe('SessionRepository — multi-conversation methods', () => {
     });
 
     it('listByOwner mengembalikan sesi milik owner saja', async () => {
-      const a1 = await repo.create({ profileType: 'mahasiswa', ownerType: 'device', ownerId: 'device-A' });
-      const a2 = await repo.create({ profileType: 'sma', ownerType: 'device', ownerId: 'device-A' });
-      await repo.create({ profileType: 'mahasiswa', ownerType: 'device', ownerId: 'device-B' });
+      const a1 = await repo.create({ ownerType: 'device', ownerId: 'device-A' });
+      const a2 = await repo.create({ ownerType: 'device', ownerId: 'device-A' });
+      await repo.create({ ownerType: 'device', ownerId: 'device-B' });
 
       const list = await repo.listByOwner('device', 'device-A');
       const ids = list.map((s) => s.sessionId);
@@ -36,8 +35,8 @@ describe('SessionRepository — multi-conversation methods', () => {
     });
 
     it('listByOwner memisahkan sesi device vs user', async () => {
-      await repo.create({ profileType: 'mahasiswa', ownerType: 'device', ownerId: 'shared-id' });
-      await repo.create({ profileType: 'mahasiswa', ownerType: 'user', ownerId: 'shared-id' });
+      await repo.create({ ownerType: 'device', ownerId: 'shared-id' });
+      await repo.create({ ownerType: 'user', ownerId: 'shared-id' });
 
       const deviceList = await repo.listByOwner('device', 'shared-id');
       const userList = await repo.listByOwner('user', 'shared-id');
@@ -49,10 +48,10 @@ describe('SessionRepository — multi-conversation methods', () => {
     });
 
     it('listByOwner sort by updatedAt descending', async () => {
-      const s1 = await repo.create({ profileType: 'mahasiswa', ownerType: 'device', ownerId: 'A' });
+      const s1 = await repo.create({ ownerType: 'device', ownerId: 'A' });
       // jeda kecil supaya updatedAt berbeda
       await new Promise((r) => setTimeout(r, 5));
-      const s2 = await repo.create({ profileType: 'mahasiswa', ownerType: 'device', ownerId: 'A' });
+      const s2 = await repo.create({ ownerType: 'device', ownerId: 'A' });
       await new Promise((r) => setTimeout(r, 5));
       await repo.touch(s1.sessionId);
 
@@ -64,7 +63,7 @@ describe('SessionRepository — multi-conversation methods', () => {
 
   describe('updateTitle', () => {
     it('mengubah title dan bump updatedAt', async () => {
-      const s = await repo.create({ profileType: 'mahasiswa', ownerType: 'device', ownerId: 'A' });
+      const s = await repo.create({ ownerType: 'device', ownerId: 'A' });
       const initialUpdatedAt = s.updatedAt;
       await new Promise((r) => setTimeout(r, 10));
 
@@ -78,7 +77,7 @@ describe('SessionRepository — multi-conversation methods', () => {
 
   describe('archive', () => {
     it('archive set isArchived=true dan exclude dari listByOwner', async () => {
-      const s = await repo.create({ profileType: 'mahasiswa', ownerType: 'device', ownerId: 'A' });
+      const s = await repo.create({ ownerType: 'device', ownerId: 'A' });
 
       let list = await repo.listByOwner('device', 'A');
       expect(list).toHaveLength(1);
@@ -96,7 +95,7 @@ describe('SessionRepository — multi-conversation methods', () => {
 
   describe('touch', () => {
     it('hanya update updatedAt tanpa mengubah field lain', async () => {
-      const s = await repo.create({ profileType: 'mahasiswa', ownerType: 'device', ownerId: 'A' });
+      const s = await repo.create({ ownerType: 'device', ownerId: 'A' });
       await repo.updateTitle(s.sessionId, 'My Title');
       const before = await repo.get(s.sessionId);
       await new Promise((r) => setTimeout(r, 10));
@@ -111,9 +110,9 @@ describe('SessionRepository — multi-conversation methods', () => {
 
   describe('migrateOwner', () => {
     it('memindah semua sesi device-A ke user-X', async () => {
-      await repo.create({ profileType: 'mahasiswa', ownerType: 'device', ownerId: 'device-A' });
-      await repo.create({ profileType: 'sma', ownerType: 'device', ownerId: 'device-A' });
-      await repo.create({ profileType: 'mahasiswa', ownerType: 'device', ownerId: 'device-B' });
+      await repo.create({ ownerType: 'device', ownerId: 'device-A' });
+      await repo.create({ ownerType: 'device', ownerId: 'device-A' });
+      await repo.create({ ownerType: 'device', ownerId: 'device-B' });
 
       const migrated = await repo.migrateOwner('device-A', 'user-X');
       expect(migrated).toBe(2);
@@ -126,7 +125,7 @@ describe('SessionRepository — multi-conversation methods', () => {
     });
 
     it('idempotent: panggil dua kali tidak duplikat', async () => {
-      await repo.create({ profileType: 'mahasiswa', ownerType: 'device', ownerId: 'device-A' });
+      await repo.create({ ownerType: 'device', ownerId: 'device-A' });
 
       await repo.migrateOwner('device-A', 'user-X');
       const second = await repo.migrateOwner('device-A', 'user-X');
@@ -137,8 +136,8 @@ describe('SessionRepository — multi-conversation methods', () => {
     });
 
     it('tidak menyentuh sesi user yang sudah ada', async () => {
-      await repo.create({ profileType: 'mahasiswa', ownerType: 'user', ownerId: 'user-X' });
-      await repo.create({ profileType: 'sma', ownerType: 'device', ownerId: 'device-A' });
+      await repo.create({ ownerType: 'user', ownerId: 'user-X' });
+      await repo.create({ ownerType: 'device', ownerId: 'device-A' });
 
       const migrated = await repo.migrateOwner('device-A', 'user-X');
       expect(migrated).toBe(1);
@@ -152,7 +151,6 @@ describe('SessionRepository — multi-conversation methods', () => {
     it('session tanpa ownerType/ownerId dapat default device/legacy', () => {
       const raw = {
         sessionId: 'old-session',
-        profileType: 'mahasiswa',
         currentMode: 'explainer',
         startedAt: '2026-01-01T00:00:00Z',
       };
@@ -168,7 +166,6 @@ describe('SessionRepository — multi-conversation methods', () => {
       const internalStore = (repo as any).store;
       internalStore.sessions['legacy-1'] = {
         sessionId: 'legacy-1',
-        profileType: 'mahasiswa',
         currentMode: 'explainer',
         startedAt: '2026-01-01T00:00:00Z',
         // ownerType, ownerId, updatedAt tidak ada — simulasi data lama

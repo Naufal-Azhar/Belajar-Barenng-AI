@@ -6,7 +6,6 @@ import type { Session } from '@/lib/types';
 function makeSession(overrides: Partial<Session> = {}): Session {
   return {
     sessionId: 'sess-1',
-    profileType: 'mahasiswa',
     currentMode: 'explainer',
     startedAt: new Date().toISOString(),
     ownerType: 'device',

@@ -4,7 +4,6 @@ import type {
   DocumentContext,
   Message,
   LearningMode,
-  ProfileType,
   SummaryPayload,
   OwnerType,
 } from './types';
@@ -14,7 +13,6 @@ import { FirestoreError, NotFoundError } from './validation';
 const MAX_EXTRACTED_TEXT_BYTES = 200 * 1024; // 200 KB
 
 export interface CreateSessionInput {
-  profileType: ProfileType;
   ownerType: OwnerType;
   ownerId: string;
 }
@@ -86,7 +84,6 @@ export class FirestoreSessionRepository implements SessionRepository {
       const now = new Date().toISOString();
       const session: Session = {
         sessionId,
-        profileType: input.profileType,
         currentMode: 'explainer',
         startedAt: now,
         ownerType: input.ownerType,
