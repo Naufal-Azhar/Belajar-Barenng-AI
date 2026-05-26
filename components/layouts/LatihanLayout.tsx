@@ -3,8 +3,9 @@
 import { useMemo, useState, useReducer, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { revealReducer } from '@/components/LatihanComponent';
+import MessageRenderer from '@/components/MessageRenderer';
 import type { ModeLayoutProps } from './LayoutRouter';
-import type { LatihanPayload } from '@/lib/types';
+import type { Message, LatihanPayload } from '@/lib/types';
 
 /**
  * Latihan_Layout (Req 7). Two-column attempt-first:
@@ -37,20 +38,68 @@ export default function LatihanLayout(props: ModeLayoutProps) {
   }, [messages]);
 
   return (
-    <div className="flex flex-1 min-h-0 overflow-y-auto md:overflow-hidden md:flex-row flex-col px-3 py-4 sm:px-4 sm:py-6 gap-6">
-      {!activeLatihan ? (
-        <EmptyLatihanHint onSend={onSend} isStreaming={isStreaming} />
-      ) : (
-        <ActiveLatihan
-          payload={activeLatihan}
-          isStreaming={isStreaming}
-          onAttempt={onLatihanAttempt}
-          onEasier={onLatihanEasier}
-          onHarder={onLatihanHarder}
-          onNew={onLatihanNew}
-        />
-      )}
+    <div className="flex flex-1 min-h-0 flex-col">
+      <LatihanHistorySection
+        messages={messages}
+        onLatihanAttempt={onLatihanAttempt}
+      />
+      <div className="flex flex-1 min-h-0 overflow-y-auto md:overflow-hidden md:flex-row flex-col px-3 py-4 sm:px-4 sm:py-6 gap-6">
+        {!activeLatihan ? (
+          <EmptyLatihanHint onSend={onSend} isStreaming={isStreaming} />
+        ) : (
+          <ActiveLatihan
+            payload={activeLatihan}
+            isStreaming={isStreaming}
+            onAttempt={onLatihanAttempt}
+            onEasier={onLatihanEasier}
+            onHarder={onLatihanHarder}
+            onNew={onLatihanNew}
+          />
+        )}
+      </div>
     </div>
+  );
+}
+
+/**
+ * History section di atas konten utama LatihanLayout. Pola sama dengan
+ * KuisHistorySection: render pesan sebelumnya (lintas mode) lewat
+ * MessageRenderer activeMode='latihan'. Default collapsed kalau pesan > 3.
+ */
+interface LatihanHistorySectionProps {
+  messages: Message[];
+  onLatihanAttempt: (attempt: string) => void;
+}
+
+function LatihanHistorySection({
+  messages,
+  onLatihanAttempt,
+}: LatihanHistorySectionProps) {
+  if (messages.length === 0) return null;
+
+  return (
+    <section
+      aria-label="Riwayat sesi"
+      className="border-b border-hairline bg-canvas px-3 py-3 sm:px-4 sm:py-4 max-h-[40vh] overflow-y-auto shrink-0"
+    >
+      <details open={messages.length <= 3}>
+        <summary className="text-caption-upper uppercase tracking-wider text-muted cursor-pointer mb-2 select-none">
+          Riwayat sesi ({messages.length} pesan)
+        </summary>
+        <div className="space-y-3">
+          {messages.map((msg, idx) => (
+            <MessageRenderer
+              key={idx}
+              message={msg}
+              activeMode="latihan"
+              handlers={{
+                onSubmitAttempt: onLatihanAttempt,
+              }}
+            />
+          ))}
+        </div>
+      </details>
+    </section>
   );
 }
 

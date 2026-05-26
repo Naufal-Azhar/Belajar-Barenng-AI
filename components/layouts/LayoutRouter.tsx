@@ -6,6 +6,7 @@ import type {
   Message,
   Session,
   ExplainerSectionLabel,
+  UserMessageIntent,
 } from '@/lib/types';
 import PenjelasLayout from './PenjelasLayout';
 import SokratikLayout from './SokratikLayout';
@@ -19,12 +20,26 @@ const VALID_MODES: ReadonlyArray<LearningMode> = [
   'latihan',
 ];
 
+/**
+ * Optional metadata yang bisa di-attach ke pesan user. Dipakai buat
+ * bedakan ketikan manual vs aksi tombol UI yang otomatis nge-trigger
+ * pesan template.
+ */
+export interface SendOptions {
+  intent?: UserMessageIntent;
+  actionLabel?: string;
+}
+
 export interface ModeLayoutProps {
   session: Session;
   messages: Message[];
   isStreaming: boolean;
-  /** Composer / chat send */
-  onSend: (text: string) => void;
+  /**
+   * Composer / chat send. Optional `opts` buat propagate intent dari handler
+   * auto-trigger (mis. document upload, quiz wizard complete) tanpa harus
+   * lewat handler khusus per use case.
+   */
+  onSend: (text: string, opts?: SendOptions) => void;
   /** Quiz answer submit (mcq/essay) */
   onQuizAnswer: (answer: string) => void;
   /** Latihan attempt submit */

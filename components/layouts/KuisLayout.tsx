@@ -4,9 +4,10 @@ import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import QuizComponent from '@/components/QuizComponent';
 import QuizWizard from '@/components/QuizWizard';
+import MessageRenderer from '@/components/MessageRenderer';
 import AIStatusBox, { AIStatusBoxMobile } from '@/components/AIStatusBox';
 import type { ModeLayoutProps } from './LayoutRouter';
-import type { QuizConfig, QuizPayload } from '@/lib/types';
+import type { Message, QuizConfig, QuizPayload } from '@/lib/types';
 import type { AIStatusBoxStatus } from '@/components/AIStatusBox';
 
 /**
@@ -61,6 +62,10 @@ export default function KuisLayout(props: ModeLayoutProps) {
     onSend(
       `Mulai kuis. Tipe: ${cfg.type}. Jumlah soal: ${cfg.count}. ` +
         `Buatkan soal pertama (index 1 dari ${cfg.count}).`,
+      {
+        intent: 'quiz-start',
+        actionLabel: `Mulai kuis: ${cfg.count} soal ${cfg.type}`,
+      },
     );
   };
 
@@ -79,6 +84,7 @@ export default function KuisLayout(props: ModeLayoutProps) {
       onSend(
         `Lanjut soal ${answeredCount + 2} dari ${config.count}. ` +
           `Tipe: ${config.type}.`,
+        { intent: 'quiz-next', actionLabel: 'Soal berikutnya' },
       );
     }
   };
@@ -195,7 +201,15 @@ export default function KuisLayout(props: ModeLayoutProps) {
 
   return (
     <div className="flex flex-1 min-h-0 md:flex-row flex-col">
-      <section className="flex-1 min-w-0 overflow-hidden">{leftColumn}</section>
+      <section className="flex flex-1 min-w-0 flex-col overflow-hidden">
+        <KuisHistorySection
+          messages={messages}
+          onQuizAnswer={onQuizAnswer}
+          onAskSimilar={onAskSimilar}
+          onAskHarder={onAskHarder}
+        />
+        <div className="flex-1 min-h-0 overflow-hidden">{leftColumn}</div>
+      </section>
 
       {/* Rail kanan: AI Status Box (sticky pada desktop) */}
       <div className="hidden md:flex md:flex-col md:items-end p-5 border-l border-hairline bg-surface-card">
@@ -219,5 +233,59 @@ export default function KuisLayout(props: ModeLayoutProps) {
         onSkip={handleSkip}
       />
     </div>
+  );
+}
+
+/**
+ * History section di atas konten utama KuisLayout. Render pesan sebelumnya
+ * (lintas mode) sebagai compact card / chip via MessageRenderer dengan
+ * activeMode='quiz'. Pesan kuis yang aktif tetap dirender penuh sama
+ * MessageRenderer (sesuai decision tree) tapi UX-nya overlap dengan
+ * <QuizComponent> di leftColumn — itu OK karena UX flow utamanya tetap
+ * dari leftColumn.
+ *
+ * Default collapsed kalau pesan > 3 untuk menjaga layar tetap bersih
+ * saat lagi ngerjain soal.
+ */
+interface KuisHistorySectionProps {
+  messages: Message[];
+  onQuizAnswer: (answer: string) => void;
+  onAskSimilar: () => void;
+  onAskHarder: () => void;
+}
+
+function KuisHistorySection({
+  messages,
+  onQuizAnswer,
+  onAskSimilar,
+  onAskHarder,
+}: KuisHistorySectionProps) {
+  if (messages.length === 0) return null;
+
+  return (
+    <section
+      aria-label="Riwayat sesi"
+      className="border-b border-hairline bg-canvas px-3 py-3 sm:px-4 sm:py-4 max-h-[40vh] overflow-y-auto"
+    >
+      <details open={messages.length <= 3}>
+        <summary className="text-caption-upper uppercase tracking-wider text-muted cursor-pointer mb-2 select-none">
+          Riwayat sesi ({messages.length} pesan)
+        </summary>
+        <div className="space-y-3">
+          {messages.map((msg, idx) => (
+            <MessageRenderer
+              key={idx}
+              message={msg}
+              activeMode="quiz"
+              handlers={{
+                onSubmitAnswer: onQuizAnswer,
+                onAskSimilar,
+                onAskHarder,
+              }}
+            />
+          ))}
+        </div>
+      </details>
+    </section>
   );
 }

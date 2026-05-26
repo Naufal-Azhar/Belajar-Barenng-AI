@@ -2,8 +2,7 @@
 
 import { useMemo, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
-import MessageBubble from '@/components/MessageBubble';
-import SocraticComponent from '@/components/SocraticComponent';
+import MessageRenderer from '@/components/MessageRenderer';
 import LoadingCat from '@/components/LoadingCat';
 import type { ModeLayoutProps } from './LayoutRouter';
 import type { Message, SocraticPayload } from '@/lib/types';
@@ -65,19 +64,17 @@ export default function SokratikLayout(props: ModeLayoutProps) {
           {messages.length === 0 && (
             <EmptySocraticHint />
           )}
-          {messages.map((msg, idx) => {
-            if (msg.role === 'ai' && msg.payload?.kind === 'socratic') {
-              return (
-                <SocraticComponent
-                  key={idx}
-                  payload={msg.payload}
-                  onSubmitThought={onSocraticThought}
-                  onConfused={onSocraticConfused}
-                />
-              );
-            }
-            return <MessageBubble key={idx} role={msg.role} content={msg.content} />;
-          })}
+          {messages.map((msg, idx) => (
+            <MessageRenderer
+              key={idx}
+              message={msg}
+              activeMode="socratic"
+              handlers={{
+                onSubmitThought: onSocraticThought,
+                onConfused: onSocraticConfused,
+              }}
+            />
+          ))}
           {isStreaming && <TypingIndicator />}
           <div ref={bottomRef} />
         </div>

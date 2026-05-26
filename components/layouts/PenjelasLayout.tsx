@@ -39,7 +39,10 @@ export default function PenjelasLayout(props: ModeLayoutProps) {
   };
 
   const handleUploadComplete = ({ fileName }: { fileName: string }) => {
-    onSend(`Saya sudah upload file "${fileName}". Tolong jelaskan isi materi ini.`);
+    onSend(
+      `Saya sudah upload file "${fileName}". Tolong jelaskan isi materi ini.`,
+      { intent: 'document-uploaded', actionLabel: `Upload: ${fileName}` },
+    );
   };
 
   return (

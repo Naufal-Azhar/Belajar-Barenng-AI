@@ -9,22 +9,41 @@ import type {
   LatihanPayload,
   ExplainerPayload,
   SocraticPayload,
+  UserMessageIntent,
 } from '@/lib/types';
 
 type Dispatch = (action: any) => void;
 
+export interface SendMessageArgs {
+  message: string;
+  mode?: LearningMode;
+  /**
+   * Penanda asal pesan: 'manual' (default) buat ketikan user, atau salah satu
+   * intent auto-trigger (ask-deeper, confused, dst.) buat pesan dari klik
+   * tombol UI. Cuma metadata client-side, nggak dikirim ke /api/chat.
+   */
+  intent?: UserMessageIntent;
+  /**
+   * Label pendek buat ditampilkan di ActionChip (mis. "Lebih dalam: Inti").
+   * Cuma relevan kalau `intent` bukan 'manual'.
+   */
+  actionLabel?: string;
+}
+
 export function useChatStream(sessionId: string | undefined, dispatch: Dispatch) {
   const [isStreaming, setIsStreaming] = useState(false);
   const [lastError, setLastError] = useState<string | null>(null);
-  const lastMessageRef = useRef<{ message: string; mode?: LearningMode } | null>(null);
+  const lastMessageRef = useRef<SendMessageArgs | null>(null);
 
   const sendMessage = useCallback(
-    async (args: { message: string; mode?: LearningMode }) => {
+    async (args: SendMessageArgs) => {
       if (!sessionId) return;
 
       lastMessageRef.current = args;
       setIsStreaming(true);
       setLastError(null);
+
+      const intent: UserMessageIntent = args.intent ?? 'manual';
 
       // Optimistic: add user message
       dispatch({
@@ -36,6 +55,8 @@ export function useChatStream(sessionId: string | undefined, dispatch: Dispatch)
           mode: args.mode || 'explainer',
           content: args.message,
           createdAt: new Date().toISOString(),
+          intent,
+          ...(args.actionLabel ? { actionLabel: args.actionLabel } : {}),
         } as Message,
       });
 

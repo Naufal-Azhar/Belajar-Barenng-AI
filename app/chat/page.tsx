@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { useSession } from '@/hooks/useSession';
@@ -17,8 +17,26 @@ import type { LearningMode, ExplainerSectionLabel } from '@/lib/types';
 /**
  * /chat page — sidebar (list sesi) + main (LayoutRouter).
  * URL pattern: /chat?sessionId=xxx — query param drives which session shown.
+ *
+ * Default export wraps the inner component dengan <Suspense> karena
+ * useSession() pakai useSearchParams() yang butuh Suspense boundary
+ * di Next.js 14 (lihat: missing-suspense-with-csr-bailout).
  */
 export default function ChatPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex h-screen items-center justify-center bg-canvas">
+          <div className="text-body-sm text-muted-soft animate-pulse">Memuat...</div>
+        </div>
+      }
+    >
+      <ChatPageInner />
+    </Suspense>
+  );
+}
+
+function ChatPageInner() {
   const router = useRouter();
   const { status, session, messages, dispatch } = useSession();
   const {
@@ -51,6 +69,8 @@ export default function ChatPage() {
       sendMessage({
         message: `Bantu saya memahami konsep: ${data.concept}. Saya sudah coba menjawab "${data.userAnswer}" tapi jawaban yang benar adalah "${data.answer}".`,
         mode,
+        intent: 'cross-mode-bridge',
+        actionLabel: `Lanjut dari review: ${data.concept}`,
       });
     } catch {}
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -181,8 +201,16 @@ export default function ChatPage() {
   };
 
   // --- Shared handlers passed down to LayoutRouter ---
-  const onSend = (message: string) => {
-    sendMessage({ message, mode: session.currentMode });
+  const onSend = (
+    message: string,
+    opts?: { intent?: import('@/lib/types').UserMessageIntent; actionLabel?: string },
+  ) => {
+    sendMessage({
+      message,
+      mode: session.currentMode,
+      ...(opts?.intent ? { intent: opts.intent } : {}),
+      ...(opts?.actionLabel ? { actionLabel: opts.actionLabel } : {}),
+    });
   };
 
   const onQuizAnswer = (answer: string) => {
@@ -200,6 +228,8 @@ export default function ChatPage() {
     sendMessage({
       message: `Bisa jelasin lebih detail tentang istilah "${term}"?`,
       mode: 'explainer',
+      intent: 'ask-term',
+      actionLabel: `Tanya istilah: ${term}`,
     });
   };
 
@@ -207,6 +237,8 @@ export default function ChatPage() {
     sendMessage({
       message: `Tolong perdalam bagian ${sectionLabel.toLowerCase()} dari penjelasan barusan.`,
       mode: 'explainer',
+      intent: 'ask-deeper',
+      actionLabel: `Lebih dalam: ${sectionLabel}`,
     });
   };
 
@@ -218,19 +250,36 @@ export default function ChatPage() {
     sendMessage({
       message: 'Saya bingung, bisa pancing dengan pertanyaan yang lebih dasar?',
       mode: 'socratic',
+      intent: 'confused',
+      actionLabel: 'Saya bingung',
     });
   };
 
   const onAskSimilar = () => {
-    sendMessage({ message: 'Berikan soal serupa dengan tingkat kesulitan yang sama.', mode: 'quiz' });
+    sendMessage({
+      message: 'Berikan soal serupa dengan tingkat kesulitan yang sama.',
+      mode: 'quiz',
+      intent: 'ask-similar',
+      actionLabel: 'Soal serupa',
+    });
   };
 
   const onAskHarder = () => {
-    sendMessage({ message: 'Berikan soal yang lebih sulit dari sebelumnya.', mode: 'quiz' });
+    sendMessage({
+      message: 'Berikan soal yang lebih sulit dari sebelumnya.',
+      mode: 'quiz',
+      intent: 'ask-harder',
+      actionLabel: 'Soal lebih sulit',
+    });
   };
 
   const onQuizSkip = () => {
-    sendMessage({ message: 'Skip soal ini, langsung ke soal berikutnya.', mode: 'quiz' });
+    sendMessage({
+      message: 'Skip soal ini, langsung ke soal berikutnya.',
+      mode: 'quiz',
+      intent: 'quiz-skip',
+      actionLabel: 'Skip soal',
+    });
   };
 
   const onQuizStop = () => {
@@ -238,15 +287,30 @@ export default function ChatPage() {
   };
 
   const onLatihanEasier = () => {
-    sendMessage({ message: 'Berikan soal yang lebih mudah dengan topik sama.', mode: 'latihan' });
+    sendMessage({
+      message: 'Berikan soal yang lebih mudah dengan topik sama.',
+      mode: 'latihan',
+      intent: 'ask-easier',
+      actionLabel: 'Soal lebih mudah',
+    });
   };
 
   const onLatihanHarder = () => {
-    sendMessage({ message: 'Berikan soal yang lebih sulit dari sebelumnya.', mode: 'latihan' });
+    sendMessage({
+      message: 'Berikan soal yang lebih sulit dari sebelumnya.',
+      mode: 'latihan',
+      intent: 'ask-harder',
+      actionLabel: 'Soal lebih sulit',
+    });
   };
 
   const onLatihanNew = () => {
-    sendMessage({ message: 'Berikan soal latihan baru di tingkat kesulitan yang sama.', mode: 'latihan' });
+    sendMessage({
+      message: 'Berikan soal latihan baru di tingkat kesulitan yang sama.',
+      mode: 'latihan',
+      intent: 'ask-new',
+      actionLabel: 'Soal baru',
+    });
   };
 
   return (
@@ -358,7 +422,11 @@ export default function ChatPage() {
         )}
 
         {/* Layout Router */}
-        <div className={session.endedAt ? 'pointer-events-none opacity-60' : ''}>
+        <div
+          className={`flex-1 flex flex-col min-h-0 ${
+            session.endedAt ? 'pointer-events-none opacity-60' : ''
+          }`}
+        >
           <LayoutRouter
           currentMode={session.currentMode}
           session={session}

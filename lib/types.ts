@@ -122,6 +122,29 @@ export type AnyPayload =
   | QuizPayload
   | LatihanPayload;
 
+/**
+ * Penanda asal pesan user. Membedakan ketikan manual vs aksi tombol UI yang
+ * otomatis nge-trigger pesan template ke AI. Dipakai oleh ActionChip untuk
+ * render pesan auto-trigger sebagai chip kompak (bukan bubble user biasa).
+ *
+ * Hanya disimpan di state client + Firestore message doc — TIDAK dikirim
+ * ke `/api/chat` karena nggak mempengaruhi prompt atau response AI.
+ */
+export type UserMessageIntent =
+  | 'manual'              // user nyatanya mengetik
+  | 'ask-term'            // klik chip istilah di Explainer
+  | 'ask-deeper'          // klik "Lebih dalam tentang X"
+  | 'confused'            // klik "Saya bingung" di Sokratik
+  | 'ask-similar'         // klik "Soal serupa" di Kuis
+  | 'ask-harder'          // klik "Lebih sulit"
+  | 'ask-easier'          // klik "Lebih mudah" di Latihan
+  | 'ask-new'             // klik "Soal baru"
+  | 'quiz-skip'           // klik "Skip"
+  | 'quiz-start'          // dari QuizWizard
+  | 'quiz-next'           // dari Kuis handleNext
+  | 'document-uploaded'   // dari uploader
+  | 'cross-mode-bridge';  // dari review → chat
+
 export interface Message {
   messageId: string;
   sessionId: string;
@@ -130,6 +153,16 @@ export interface Message {
   content: string;
   createdAt: string;
   payload?: AnyPayload;
+  /**
+   * Penanda asal pesan user (manual ketik vs auto-trigger dari klik tombol UI).
+   * Opsional — pesan AI atau pesan legacy tanpa field ini di-treat sebagai 'manual'.
+   */
+  intent?: UserMessageIntent;
+  /**
+   * Label pendek buat ditampilkan di ActionChip (mis. "Lebih dalam: Inti").
+   * Cuma relevan kalau `intent` ada dan bukan 'manual'.
+   */
+  actionLabel?: string;
 }
 
 export interface SummaryPayload {

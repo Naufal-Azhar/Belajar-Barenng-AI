@@ -367,3 +367,94 @@ GOOGLE_APPLICATION_CREDENTIALS=path/to/service-account.json \
 npm run migrate:firestore
 ```
 Output: `Processed: N, Migrated: M, Errors: 0`. Idempotent — aman dijalankan ulang.
+
+
+
+## update 25/5/2026 (Senin malam) — Fix JSON Mentah & Cross-Mode Rendering
+
+> *Bug fix + UX improvement: pesan AI dari mode lain nggak lagi nampil sebagai JSON mentah*
+
+---
+
+### Konteks Bug
+User screenshot bug: lagi di mode **Sokratik**, tapi pesan AI sebelumnya (yang dibuat di mode Penjelas) muncul sebagai JSON mentah panjang `{"kind":"explainer","title":"Yuk, Ngobrolin Ekonomi!",...}` di chat history. Bukan kartu UI yang rapi.
+
+Setelah investigasi, ada **3 masalah** yang saling terhubung:
+1. **SokratikLayout** cuma tahu cara render payload `socratic`. Payload jenis lain (explainer, quiz, latihan) jatuh ke `MessageBubble` yang nge-print `msg.content` mentah-mentah — dan `content`-nya itu hasil `JSON.stringify(payload)`.
+2. **KuisLayout & LatihanLayout** lebih parah — mereka nggak render history chat sama sekali. Pesan dari mode lain hilang total dari layar.
+3. **Pesan auto-trigger** kayak "Tolong perdalam bagian inti..." (di-generate otomatis pas user klik tombol "Lebih dalam") nampil sama persis kayak ketikan user manual. Bikin chat terlihat ramai dengan pesan template berulang.
+
+### Yang Dikerjain (9 task — 100%)
+
+#### Phase 1: Plumbing data (Task 1-3)
+- **Task 1**: Tambah field `intent?: UserMessageIntent` & `actionLabel?: string` opsional di `Message` type. Bikin union `UserMessageIntent` dengan 13 nilai (manual / ask-deeper / ask-term / confused / ask-similar / ask-harder / dst.). Update `useChatStream.sendMessage` agar terima parameter intent + actionLabel. Reducer di `useSession` sudah pakai spread pattern jadi otomatis ke-propagate.
+- **Task 2**: Bikin komponen baru `<ActionChip>` — render pesan auto-trigger sebagai chip kompak dengan icon + label (mis. `💡 Lebih dalam: Inti`, `🤔 Saya bingung`). Lebih kecil dan lebih lembut dibanding bubble user oranye, jadi visual nya kelihatan kayak "aksi tombol", bukan ketikan.
+- **Task 3**: Update 13 callsite handler di `app/chat/page.tsx`, `KuisLayout`, `PenjelasLayout` untuk kirim metadata intent/actionLabel saat panggil `sendMessage`. Extend `onSend` signature jadi `(text, opts?)` di `ModeLayoutProps` supaya konsisten.
+
+#### Phase 2: Cross-mode rendering (Task 4-5)
+- **Task 4**: Bikin komponen baru `<CompactPayloadCard>` — render preview ringkas dari payload AI tanpa interaksi. Punya badge mode (`📘 Penjelas` / `🤔 Sokratik` / `📝 Kuis` / `🏋️ Latihan`), title, metadata mini (jumlah section / hint count / dst.), plus hint footer "Pindah ke mode X untuk interaksi penuh".
+- **Task 5**: Bikin komponen central `<MessageRenderer>` — factory yang implement decision tree tunggal: user manual → MessageBubble; user auto-trigger → ActionChip; AI tanpa payload → MessageBubble; AI payload mode aktif → komponen full interaktif; AI payload mode lain → CompactPayloadCard. Refactor `SokratikLayout` pakai MessageRenderer (fix bug utama screenshot user).
+
+#### Phase 3: Konsistensi & history (Task 6-8)
+- **Task 6**: Refactor `<ChatStream>` (yang dipakai PenjelasLayout) supaya juga pakai MessageRenderer. Switch statement internal-nya dihapus, logic di-pusatkan ke MessageRenderer. Tambah polyfill `scrollIntoView` di `tests/setup.ts` karena jsdom nggak punya secara default.
+- **Task 7**: Tambah `<KuisHistorySection>` di KuisLayout — section scrollable di atas QuizWizard / QuizComponent yang nampilin pesan-pesan sebelumnya pakai MessageRenderer. Auto-open kalau pesan ≤ 3, collapsed kalau > 3 (pakai `<details>` native).
+- **Task 8**: Sama buat LatihanLayout — `<LatihanHistorySection>` di atas main two-column container.
+
+#### Phase 4: Verifikasi (Task 9)
+- **Task 9**: Final regression check. Run semua test (129/129 pass), TypeScript compile clean, production build sukses (17/17 pages generated). Bikin smoke test checklist `tests/properties/cross-mode-smoke.md` untuk manual testing scenarios.
+- **Bonus fix**: Sekalian fix pre-existing Next.js 14 build error — `useSearchParams()` di `useSession.ts` perlu Suspense boundary. Wrap default export `ChatPage` dengan `<Suspense fallback={...}><ChatPageInner /></Suspense>`. Issue ini ada sebelum task ini (verified via git stash + build pada kode original), tapi sekalian fix biar production deployment bisa jalan.
+
+### Hasil
+- **129/129 tests pass** (50 test baru ditambah, 0 regresi dari 79 test existing)
+- **Production build sukses** (17/17 pages generated, 0 TypeScript errors)
+- **Bug screenshot user RESOLVED** — diverify dengan E2E test di `message-renderer.test.tsx` yang replikasi skenario persis: mode aktif Sokratik + payload explainer dari sebelumnya + pesan ask-deeper user. Hasilnya: CompactPayloadCard + ActionChip render rapi, tidak ada string `{"kind":"explainer"...}` mentah.
+- **Back-compat 100%** — field `intent` & `actionLabel` opsional, pesan lama di Firestore tanpa field ini di-treat sebagai `intent === undefined` → fallback ke MessageBubble standar (perilaku lama dipertahankan). Tidak butuh migrasi data.
+- **Server contract nggak berubah** — `intent` & `actionLabel` adalah metadata client-only, tidak dikirim ke `/api/chat`. Prompt AI nggak terpengaruh.
+
+### Mapping Visual Singkat
+
+**ActionChip** (pesan user auto-trigger):
+| Tombol UI | Icon | Label |
+|---|---|---|
+| Lebih dalam tentang Inti | 💡 | Lebih dalam: Inti |
+| Tanya istilah kunci | 📖 | Tanya istilah: Sumber Daya |
+| Saya bingung (Sokratik) | 🤔 | Saya bingung |
+| Soal serupa / lebih sulit / lebih mudah | 🔁 / 📈 / 📉 | Soal X |
+| Skip soal / Soal baru / Soal berikutnya | ⏭️ / ✨ / ➡️ | label X |
+| Mulai kuis | 🚀 | Mulai kuis: 5 soal mcq |
+| Upload PDF/DOCX | 📎 | Upload: nama-file.pdf |
+| Lanjut dari review | 🔗 | Lanjut dari review: Konsep |
+
+**CompactPayloadCard** (pesan AI dari mode lain):
+| Mode payload | Badge | Metadata yang ditampilin |
+|---|---|---|
+| explainer | 📘 Penjelas | X sections · Y istilah kunci |
+| socratic | 🤔 Sokratik | Kedalaman X · Y petunjuk |
+| quiz | 📝 Kuis | Pilihan ganda/Esai · index/total |
+| latihan | 🏋️ Latihan | Tingkat X · Y langkah |
+
+### File Baru yang Dibikin
+- `components/ActionChip.tsx` — chip kompak buat pesan auto-trigger
+- `components/CompactPayloadCard.tsx` — preview ringkas payload lintas mode
+- `components/MessageRenderer.tsx` — factory decision tree tunggal
+- `tests/properties/action-chip.test.tsx` (7 test)
+- `tests/properties/compact-payload-card.test.tsx` (8 test)
+- `tests/properties/message-renderer.test.tsx` (10 test, termasuk E2E replikasi bug user)
+- `tests/properties/sokratik-action-chip.test.tsx` (4 test)
+- `tests/properties/kuis-layout.test.tsx` (6 test)
+- `tests/properties/latihan-layout.test.tsx` (5 test)
+- `tests/properties/chat-stream.test.tsx` (6 test, regression)
+- `tests/properties/message-intent.test.ts` (4 test)
+- `tests/properties/cross-mode-smoke.md` (manual smoke test checklist)
+
+### File yang Dimodif
+- Domain: `lib/types.ts`
+- Hooks: `hooks/useChatStream.ts`
+- Layouts: `components/ChatStream.tsx`, `components/layouts/SokratikLayout.tsx`, `components/layouts/KuisLayout.tsx`, `components/layouts/LatihanLayout.tsx`, `components/layouts/PenjelasLayout.tsx`, `components/layouts/LayoutRouter.tsx`
+- Page: `app/chat/page.tsx` (intent wiring + Suspense wrapper)
+- Tests: `tests/setup.ts` (scrollIntoView polyfill)
+
+### Catatan Penting
+- **Ngga butuh migrasi Firestore** — semua field baru opsional, sesi lama otomatis kompatibel.
+- **CompactPayloadCard sengaja non-interaktif** — kalau user mau klik istilah / ask deeper / dst., harus pindah balik ke mode yang sesuai. Ini sesuai pilihan UX user: "fokus tetap di pola mode aktif sekarang, history mode lain kelihatan tapi nggak dominan".
+- **Auto-trigger detection di MessageRenderer**: branch pertama dicek dulu (`intent && intent !== 'manual'`), baru fall through ke logic AI payload. Jadi pesan user auto-trigger nggak akan salah dirender sebagai bubble manual.

@@ -3,11 +3,7 @@
 import { useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
 import type { Message, ExplainerSectionLabel } from '@/lib/types';
-import MessageBubble from './MessageBubble';
-import QuizComponent from './QuizComponent';
-import LatihanComponent from './LatihanComponent';
-import ExplainerComponent from './ExplainerComponent';
-import SocraticComponent from './SocraticComponent';
+import MessageRenderer from './MessageRenderer';
 import LoadingCat from './LoadingCat';
 
 interface Props {
@@ -23,6 +19,15 @@ interface Props {
   onAskHarder?: () => void;
 }
 
+/**
+ * ChatStream — render area chat untuk mode Penjelas (PenjelasLayout pakai
+ * komponen ini). Setelah refactor Task 6, switch statement decision tree
+ * dipindah ke <MessageRenderer> agar konsisten dengan layout lain
+ * (Sokratik/Kuis/Latihan).
+ *
+ * Empty state ("Mau belajar apa?") + LoadingCat tetap di sini karena
+ * spesifik ke pola visual chat (bukan per-message).
+ */
 export default function ChatStream({
   messages,
   isStreaming,
@@ -82,52 +87,23 @@ export default function ChatStream({
         </div>
       )}
 
-      {messages.map((msg, idx) => {
-        if (msg.role === 'ai' && msg.payload) {
-          switch (msg.payload.kind) {
-            case 'explainer':
-              return (
-                <ExplainerComponent
-                  key={idx}
-                  payload={msg.payload}
-                  onAskTerm={onAskTerm}
-                  onAskDeeper={onAskDeeper}
-                />
-              );
-            case 'socratic':
-              return (
-                <SocraticComponent
-                  key={idx}
-                  payload={msg.payload}
-                  onSubmitThought={onSocraticThought ?? (() => {})}
-                  onConfused={onSocraticConfused}
-                />
-              );
-            case 'quiz':
-              return (
-                <QuizComponent
-                  key={idx}
-                  payload={msg.payload}
-                  onSubmitAnswer={onQuizAnswer}
-                  onAskSimilar={onAskSimilar}
-                  onAskHarder={onAskHarder}
-                />
-              );
-            case 'latihan':
-              return (
-                <LatihanComponent
-                  key={idx}
-                  payload={msg.payload}
-                  onSubmitAttempt={onLatihanAttempt}
-                />
-              );
-          }
-        }
-
-        return (
-          <MessageBubble key={idx} role={msg.role} content={msg.content} />
-        );
-      })}
+      {messages.map((msg, idx) => (
+        <MessageRenderer
+          key={idx}
+          message={msg}
+          activeMode="explainer"
+          handlers={{
+            onAskTerm,
+            onAskDeeper,
+            onSubmitAnswer: onQuizAnswer,
+            onSubmitAttempt: onLatihanAttempt,
+            onSubmitThought: onSocraticThought,
+            onConfused: onSocraticConfused,
+            onAskSimilar,
+            onAskHarder,
+          }}
+        />
+      ))}
 
       {isStreaming && (
         <div className="flex justify-start">
