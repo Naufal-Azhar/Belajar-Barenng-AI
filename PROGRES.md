@@ -458,3 +458,6 @@ Setelah investigasi, ada **3 masalah** yang saling terhubung:
 - **Ngga butuh migrasi Firestore** — semua field baru opsional, sesi lama otomatis kompatibel.
 - **CompactPayloadCard sengaja non-interaktif** — kalau user mau klik istilah / ask deeper / dst., harus pindah balik ke mode yang sesuai. Ini sesuai pilihan UX user: "fokus tetap di pola mode aktif sekarang, history mode lain kelihatan tapi nggak dominan".
 - **Auto-trigger detection di MessageRenderer**: branch pertama dicek dulu (`intent && intent !== 'manual'`), baru fall through ke logic AI payload. Jadi pesan user auto-trigger nggak akan salah dirender sebagai bubble manual.
+
+
+lanjut besok malas kali gwe, ini cuman buat absen
