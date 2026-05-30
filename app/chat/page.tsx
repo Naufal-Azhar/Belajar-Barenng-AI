@@ -54,7 +54,19 @@ function ChatPageInner() {
   const [endingSession, setEndingSession] = useState(false);
   const [showExtraction, setShowExtraction] = useState(false);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { shouldShow: extractionReady, accept: acceptExtraction, dismiss: dismissExtraction } = useExtractionTrigger(messages, session);
+
+  useEffect(() => {
+    setSidebarCollapsed(localStorage.getItem('belajar.sidebarCollapsed') === '1');
+  }, []);
+
+  const toggleSidebarCollapsed = () =>
+    setSidebarCollapsed((v) => {
+      const next = !v;
+      localStorage.setItem('belajar.sidebarCollapsed', next ? '1' : '0');
+      return next;
+    });
 
   // Cross-mode bridge: auto-send message if coming from review
   useEffect(() => {
@@ -326,6 +338,7 @@ function ChatPageInner() {
         onDelete={handleDeleteSession}
         isOpenMobile={mobileSidebarOpen}
         onCloseMobile={() => setMobileSidebarOpen(false)}
+        isCollapsedDesktop={sidebarCollapsed}
       />
 
       {/* Main column */}
@@ -348,14 +361,23 @@ function ChatPageInner() {
                 <path d="M3 6h18M3 12h18M3 18h18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
               </svg>
             </button>
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" className="text-ink">
-              <path
-                d="M12 2L12 22M2 12L22 12M4.93 4.93L19.07 19.07M19.07 4.93L4.93 19.07"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-              />
-            </svg>
+            {/* Desktop sidebar toggle */}
+            <button
+              onClick={toggleSidebarCollapsed}
+              aria-label={sidebarCollapsed ? 'Tampilkan daftar sesi' : 'Sembunyikan daftar sesi'}
+              className="hidden md:inline-flex p-1 text-muted hover:text-ink hover:bg-surface rounded transition-colors"
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <rect x="3" y="4" width="18" height="16" rx="2" />
+                <line x1="9" y1="4" x2="9" y2="20" />
+              </svg>
+            </button>
+            <span className="grid grid-cols-2 grid-rows-2 gap-0.5" aria-hidden="true">
+              <span className="h-2 w-2 bg-primary" />
+              <span className="h-2 w-2 bg-accent-amber" />
+              <span className="h-2 w-2 bg-accent-leaf" />
+              <span className="h-2 w-2 bg-primary" />
+            </span>
             <span className="text-nav-link font-sans font-medium text-ink hidden sm:inline">BelajarBareng</span>
           </div>
 

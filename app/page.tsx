@@ -52,7 +52,7 @@ export default function HomePage() {
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-semibold text-ink">🧠 Memori Kamu</h3>
         {stats.streak > 0 && (
-          <span className="text-xs bg-orange-100 text-orange-600 px-2 py-0.5 rounded-full">
+          <span className="text-xs bg-accent-amber/20 text-ink px-2 py-0.5 rounded-full">
             🔥 {stats.streak} hari
           </span>
         )}
@@ -67,7 +67,7 @@ export default function HomePage() {
           <p className="text-xs text-muted">Due</p>
         </div>
         <div>
-          <p className="text-lg font-bold text-green-600">{stats.mastered}</p>
+          <p className="text-lg font-bold text-accent-leaf">{stats.mastered}</p>
           <p className="text-xs text-muted">Mastered</p>
         </div>
       </div>

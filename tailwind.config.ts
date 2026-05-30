@@ -11,13 +11,14 @@ const config: Config = {
       colors: {
         // Brand & Accent
         primary: {
-          DEFAULT: '#cc785c',
-          active: '#a9583e',
+          DEFAULT: '#2A7E72',
+          active: '#246E64',
           disabled: 'var(--color-primary-disabled)',
         },
         accent: {
-          teal: '#5db8a6',
-          amber: '#e8a55a',
+          teal: '#2E8B7F',
+          amber: '#E0913B',
+          leaf: '#4E8C46',
         },
         // Semantic surfaces (CSS variable driven)
         canvas: 'var(--color-canvas)',
@@ -45,7 +46,7 @@ const config: Config = {
           soft: 'var(--color-muted-soft)',
         },
         'on-primary': '#ffffff',
-        'on-dark': '#faf9f5',
+        'on-dark': '#F2EFE6',
         'on-dark-soft': '#a09d96',
         // Semantic
         success: '#5db872',
@@ -53,9 +54,10 @@ const config: Config = {
         error: '#c64545',
       },
       fontFamily: {
-        serif: ['Cormorant Garamond', 'EB Garamond', 'Garamond', 'Times New Roman', 'serif'],
-        sans: ['Inter', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        serif: ['Fraunces', 'Georgia', 'Times New Roman', 'serif'],
+        sans: ['Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
+        pixel: ['Silkscreen', 'monospace'],
       },
       fontSize: {
         'display-xl': ['64px', { lineHeight: '1.05', letterSpacing: '-1.5px', fontWeight: '400' }],

@@ -6,6 +6,7 @@ import QuizComponent from '@/components/QuizComponent';
 import QuizWizard from '@/components/QuizWizard';
 import MessageRenderer from '@/components/MessageRenderer';
 import AIStatusBox, { AIStatusBoxMobile } from '@/components/AIStatusBox';
+import RailToggle from '@/components/RailToggle';
 import type { ModeLayoutProps } from './LayoutRouter';
 import type { Message, QuizConfig, QuizPayload } from '@/lib/types';
 import type { AIStatusBoxStatus } from '@/components/AIStatusBox';
@@ -30,6 +31,7 @@ export default function KuisLayout(props: ModeLayoutProps) {
 
   const [config, setConfig] = useState<QuizConfig | null>(session.quizConfig ?? null);
   const [stopped, setStopped] = useState(false);
+  const [railOpen, setRailOpen] = useState(true);
 
   const hasDocument = !!session.documentContext?.compiledMarkdown;
 
@@ -211,17 +213,20 @@ export default function KuisLayout(props: ModeLayoutProps) {
         <div className="flex-1 min-h-0 overflow-hidden">{leftColumn}</div>
       </section>
 
-      {/* Rail kanan: AI Status Box (sticky pada desktop) */}
-      <div className="hidden md:flex md:flex-col md:items-end p-5 border-l border-hairline bg-surface-card">
-        <AIStatusBox
-          status={status}
-          currentIndex={currentIndex}
-          total={total}
-          correctCount={answeredCount}
-          onStop={handleStop}
-          onSkip={handleSkip}
-        />
-      </div>
+      {/* Rail kanan: AI Status Box (sticky pada desktop) — bisa di-collapse */}
+      <RailToggle open={railOpen} onToggle={() => setRailOpen((v) => !v)} label="status" />
+      {railOpen && (
+        <div className="hidden md:flex md:flex-col md:items-end p-5 border-l border-hairline bg-surface-card">
+          <AIStatusBox
+            status={status}
+            currentIndex={currentIndex}
+            total={total}
+            correctCount={answeredCount}
+            onStop={handleStop}
+            onSkip={handleSkip}
+          />
+        </div>
+      )}
 
       {/* Mobile fallback: sticky-bottom pill */}
       <AIStatusBoxMobile

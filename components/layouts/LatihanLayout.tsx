@@ -4,6 +4,7 @@ import { useMemo, useState, useReducer, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { revealReducer } from '@/components/LatihanComponent';
 import MessageRenderer from '@/components/MessageRenderer';
+import RailToggle from '@/components/RailToggle';
 import type { ModeLayoutProps } from './LayoutRouter';
 import type { Message, LatihanPayload } from '@/lib/types';
 
@@ -127,6 +128,7 @@ function ActiveLatihan({
   const [attempt, setAttempt] = useState('');
   const [hasAttempted, setHasAttempted] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [railOpen, setRailOpen] = useState(true);
   const inputRef = useRef<HTMLTextAreaElement>(null);
 
   // Reset state ketika payload berubah (soal baru)
@@ -236,7 +238,9 @@ function ActiveLatihan({
         </AnimatePresence>
       </section>
 
-      {/* Kolom kanan: steps rail */}
+      {/* Kolom kanan: steps rail — bisa di-collapse */}
+      <RailToggle open={railOpen} onToggle={() => setRailOpen((v) => !v)} label="langkah" />
+      {railOpen && (
       <aside
         style={{ width: 'clamp(280px, 24vw, 340px)' }}
         className="hidden md:flex flex-col gap-3 sticky top-0 self-start max-h-[calc(100vh-64px)] overflow-y-auto rounded-lg border border-hairline bg-surface-card p-4"
@@ -312,6 +316,7 @@ function ActiveLatihan({
           })}
         </div>
       </aside>
+      )}
 
       {/* Mobile drawer for steps */}
       {drawerOpen && (

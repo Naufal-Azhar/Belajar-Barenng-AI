@@ -55,7 +55,7 @@ export default function QuizComponent({
       className="card my-4"
     >
       <div className="mb-3 flex items-center gap-2">
-        <span className="badge-coral">
+        <span className="badge-primary">
           {payload.type === 'mcq' ? 'Pilihan Ganda' : 'Essay'}
         </span>
       </div>

@@ -110,7 +110,15 @@ export default function ReviewPage() {
       {/* Header */}
       <header className="flex items-center justify-between px-4 py-3 border-b border-hairline">
         <button onClick={() => router.push('/')} className="text-sm text-muted hover:text-ink">← Beranda</button>
-        <h1 className="text-sm font-medium text-ink">Review Memori</h1>
+        <h1 className="flex items-center gap-2 text-sm font-medium text-ink">
+          <span className="grid grid-cols-2 grid-rows-2 gap-0.5" aria-hidden="true">
+            <span className="h-1.5 w-1.5 bg-primary" />
+            <span className="h-1.5 w-1.5 bg-accent-amber" />
+            <span className="h-1.5 w-1.5 bg-accent-leaf" />
+            <span className="h-1.5 w-1.5 bg-primary" />
+          </span>
+          Review Memori
+        </h1>
         {cards.length > 0 && stage !== 'complete' && (
           <span className="text-xs text-muted">{currentIdx + 1}/{cards.length}</span>
         )}

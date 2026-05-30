@@ -18,6 +18,8 @@ interface SidebarProps {
   /** Mobile-only: control drawer open state */
   isOpenMobile?: boolean;
   onCloseMobile?: () => void;
+  /** Desktop-only: hide the persistent sidebar to widen the chat */
+  isCollapsedDesktop?: boolean;
 }
 
 /**
@@ -43,6 +45,7 @@ export default function Sidebar({
   onDelete,
   isOpenMobile = false,
   onCloseMobile,
+  isCollapsedDesktop = false,
 }: SidebarProps) {
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameValue, setRenameValue] = useState('');
@@ -160,12 +163,12 @@ export default function Sidebar({
 
   return (
     <>
-      {/* Desktop: always visible */}
-      <aside className="hidden md:block h-full">
+      {/* Desktop: visible unless collapsed */}
+      <aside className={`${isCollapsedDesktop ? 'hidden' : 'hidden md:block'} h-full`}>
         {sidebarContent}
       </aside>
 
-      {/* Mobile: drawer */}
+      {/* Mobile: drawer (swipe left to close) */}
       <AnimatePresence>
         {isOpenMobile && (
           <>
@@ -181,7 +184,13 @@ export default function Sidebar({
               animate={{ x: 0 }}
               exit={{ x: -280 }}
               transition={{ type: 'tween', duration: 0.2 }}
-              className="md:hidden fixed left-0 top-0 bottom-0 z-50 h-full"
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={{ left: 0.4, right: 0 }}
+              onDragEnd={(_, info) => {
+                if (info.offset.x < -60) onCloseMobile?.();
+              }}
+              className="md:hidden fixed left-0 top-0 bottom-0 z-50 h-full touch-pan-y"
             >
               {sidebarContent}
             </motion.aside>

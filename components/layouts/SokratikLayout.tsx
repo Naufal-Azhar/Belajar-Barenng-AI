@@ -4,6 +4,7 @@ import { useMemo, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import MessageRenderer from '@/components/MessageRenderer';
 import LoadingCat from '@/components/LoadingCat';
+import RailToggle from '@/components/RailToggle';
 import type { ModeLayoutProps } from './LayoutRouter';
 import type { Message, SocraticPayload } from '@/lib/types';
 
@@ -25,6 +26,7 @@ export default function SokratikLayout(props: ModeLayoutProps) {
 
   const [input, setInput] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [railOpen, setRailOpen] = useState(true);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -115,12 +117,15 @@ export default function SokratikLayout(props: ModeLayoutProps) {
         </motion.footer>
       </section>
 
-      {/* Rail kanan (desktop ≥ 768px) */}
-      <SokratikRail
-        payload={lastSocraticAi}
-        onQuickReply={handleQuickReply}
-        className="hidden md:flex"
-      />
+      {/* Rail kanan (desktop ≥ 768px) — bisa di-collapse */}
+      <RailToggle open={railOpen} onToggle={() => setRailOpen((v) => !v)} label="petunjuk" />
+      {railOpen && (
+        <SokratikRail
+          payload={lastSocraticAi}
+          onQuickReply={handleQuickReply}
+          className="hidden md:flex"
+        />
+      )}
 
       {/* Mobile drawer */}
       {drawerOpen && (

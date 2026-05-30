@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { containerVariants, itemVariants } from '@/lib/animations';
+import { PixelBadge, PixelDivider } from './Pixel';
 import LoadingCat from './LoadingCat';
 
 interface Props {
@@ -28,17 +29,12 @@ export default function OnboardingScreen({ onStart }: Props) {
   return (
     <div className="relative flex min-h-screen bg-canvas overflow-hidden">
 
-      {/* ── GIF Background — full screen, subtle ── */}
+      {/* ── Background: subtle warm pixel grid + soft leaf glow ── */}
+      <div className="pixel-grid absolute inset-0 z-0 pointer-events-none opacity-60" aria-hidden="true" />
       <div
-        className="absolute inset-0 z-0 pointer-events-none"
+        className="absolute -right-24 -top-24 z-0 h-96 w-96 rounded-full bg-accent-teal/10 blur-3xl pointer-events-none"
         aria-hidden="true"
-      >
-        <img
-          src="/leaf-bg.gif"
-          alt=""
-          className="w-full h-full object-cover opacity-20"
-        />
-      </div>
+      />
 
       {/* ── Left panel — semua konten rata kiri ── */}
       <motion.div
@@ -47,19 +43,15 @@ export default function OnboardingScreen({ onStart }: Props) {
         animate="visible"
         className="relative z-10 flex flex-col justify-center px-5 sm:px-10 py-8 sm:py-16 w-full max-w-xl lg:max-w-lg xl:max-w-xl"
       >
-        {/* Brand Mark */}
-        <motion.div variants={itemVariants} className="mb-8 flex items-center gap-2">
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" className="text-ink">
-            <path
-              d="M12 2L12 22M2 12L22 12M4.93 4.93L19.07 19.07M19.07 4.93L4.93 19.07"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
-          <span className="font-sans text-caption-upper uppercase tracking-widest text-muted text-xs">
-            BelajarBareng
+        {/* Brand Mark — pixel logo + badge eyebrow */}
+        <motion.div variants={itemVariants} className="mb-8 flex items-center gap-3">
+          <span className="grid grid-cols-2 grid-rows-2 gap-0.5" aria-hidden="true">
+            <span className="h-2.5 w-2.5 bg-primary" />
+            <span className="h-2.5 w-2.5 bg-accent-amber" />
+            <span className="h-2.5 w-2.5 bg-accent-leaf" />
+            <span className="h-2.5 w-2.5 bg-primary" />
           </span>
+          <PixelBadge>BelajarBareng</PixelBadge>
         </motion.div>
 
         {/* Headline */}
@@ -70,6 +62,10 @@ export default function OnboardingScreen({ onStart }: Props) {
           Belajar lebih<br />dalam, bareng AI.
         </motion.h1>
 
+        <motion.div variants={itemVariants}>
+          <PixelDivider className="mb-5 max-w-[120px] text-accent-amber" />
+        </motion.div>
+
         <motion.p
           variants={itemVariants}
           className="text-body-md text-body mb-6 sm:mb-10 max-w-sm"
@@ -79,7 +75,7 @@ export default function OnboardingScreen({ onStart }: Props) {
           maupun pembelajar mandiri.
         </motion.p>
 
-        {/* ── CTA: single Mulai Belajar button ── */}
+        {/* ── CTA: Mulai Belajar + pixel-fire accent ── */}
         <motion.div variants={itemVariants}>
           {error && (
             <motion.p
@@ -91,20 +87,31 @@ export default function OnboardingScreen({ onStart }: Props) {
             </motion.p>
           )}
 
-          <motion.button
-            onClick={handleStart}
-            disabled={loading}
-            className="btn-primary max-w-sm w-full"
-            whileHover={!loading ? { scale: 1.01 } : {}}
-            whileTap={!loading ? { scale: 0.97 } : {}}
-          >
-            {loading ? (
-              /* EDIT CAPTION: Onboarding start button */
-              <LoadingCat variant="button" caption="Lagi nyiapin sesi..." />
-            ) : (
-              'Mulai Belajar →'
-            )}
-          </motion.button>
+          <div className="flex items-center gap-3 max-w-sm">
+            <motion.button
+              onClick={handleStart}
+              disabled={loading}
+              className="btn-primary flex-1"
+              whileHover={!loading ? { scale: 1.01 } : {}}
+              whileTap={!loading ? { scale: 0.97 } : {}}
+            >
+              {loading ? (
+                /* EDIT CAPTION: Onboarding start button */
+                <LoadingCat variant="button" caption="Lagi nyiapin sesi..." />
+              ) : (
+                'Mulai Belajar →'
+              )}
+            </motion.button>
+            <video
+              src="/pixel-fire.webm"
+              autoPlay
+              muted
+              loop
+              playsInline
+              aria-hidden="true"
+              className="pixelated h-12 w-12 shrink-0 motion-reduce:hidden"
+            />
+          </div>
         </motion.div>
 
         <motion.p variants={itemVariants} className="mt-8 text-body-sm text-muted-soft">
