@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import OnboardingScreen from '@/components/OnboardingScreen';
 import Dashboard from '@/components/Dashboard';
+import CapacityFull from '@/components/CapacityFull';
 import { useSessions } from '@/hooks/useSessions';
+import { usePresence } from '@/hooks/usePresence';
 import { getDeviceId } from '@/lib/device-id';
 
 interface MemoryStats {
@@ -17,6 +19,7 @@ interface MemoryStats {
 
 export default function HomePage() {
   const router = useRouter();
+  const presence = usePresence();
   const { sessions, isLoading, error, createSession, refresh } = useSessions();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [stats, setStats] = useState<MemoryStats | null>(null);
@@ -81,6 +84,11 @@ export default function HomePage() {
       )}
     </motion.div>
   );
+
+  // Kapasitas penuh → blokir akses
+  if (presence === 'full') {
+    return <CapacityFull />;
+  }
 
   // First-time → langsung onboarding (no dashboard)
   if (isFirstTime) {

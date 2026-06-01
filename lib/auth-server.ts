@@ -1,5 +1,6 @@
 import type { NextRequest } from 'next/server';
 import type { OwnerType } from './types';
+import { readSessionToken, verifyToken } from './auth-token';
 
 /**
  * Identitas pemilik request — hasil resolve dari header.
@@ -29,9 +30,13 @@ export class UnauthorizedError extends Error {
  *   3. Else throw UnauthorizedError → 400
  */
 export async function resolveOwner(req: NextRequest | Request): Promise<Owner> {
-  // Future: Firebase Auth verification block here (Task 14)
+  // 1. Session cookie (user mode) — ditandatangani, tidak bisa dipalsukan
+  const session = verifyToken(readSessionToken(req as Request));
+  if (session) {
+    return { ownerType: 'user', ownerId: session.ownerId };
+  }
 
-  // Headers reader (Request and NextRequest both expose .headers.get)
+  // 2. Device mode (anonim / tamu)
   const deviceId = req.headers.get('x-device-id');
   if (deviceId && deviceId.trim().length > 0) {
     return { ownerType: 'device', ownerId: deviceId.trim() };

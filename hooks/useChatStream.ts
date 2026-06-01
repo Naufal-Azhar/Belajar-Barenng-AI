@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef } from 'react';
 import { parseSseEvents } from '@/lib/sse';
+import { apiFetch } from '@/lib/api-fetch';
 import type {
   LearningMode,
   Message,
@@ -65,7 +66,7 @@ export function useChatStream(sessionId: string | undefined, dispatch: Dispatch)
       }
 
       try {
-        const res = await fetch('/api/chat', {
+        const res = await apiFetch('/api/chat', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({

@@ -243,7 +243,7 @@ function ActiveLatihan({
       {railOpen && (
       <aside
         style={{ width: 'clamp(280px, 24vw, 340px)' }}
-        className="hidden md:flex flex-col gap-3 sticky top-0 self-start max-h-[calc(100vh-64px)] overflow-y-auto rounded-lg border border-hairline bg-surface-card p-4"
+        className="hidden md:flex flex-col gap-3 sticky top-0 self-start max-h-[calc(100vh-64px)] overflow-y-auto rounded-2xl border border-hairline bg-surface-card p-4 shadow-soft"
       >
         <div className="flex items-center justify-between">
           <span className="text-caption-upper uppercase tracking-wider text-muted">
@@ -324,7 +324,7 @@ function ActiveLatihan({
           initial={{ y: '100%' }}
           animate={{ y: 0 }}
           exit={{ y: '100%' }}
-          className="fixed inset-x-0 bottom-0 z-50 md:hidden rounded-t-xl bg-canvas border-t border-hairline shadow-subtle p-4 max-h-[70vh] overflow-y-auto"
+          className="fixed inset-x-0 bottom-0 z-50 md:hidden rounded-t-2xl bg-canvas border-t border-hairline shadow-pop p-4 max-h-[70vh] overflow-y-auto"
         >
           <div className="flex justify-between items-center mb-3">
             <span className="text-caption-upper uppercase tracking-wider text-muted">

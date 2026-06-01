@@ -75,7 +75,7 @@ export default function ActionChip({ intent, actionLabel, content }: Props) {
       <span
         role="status"
         aria-label={`Aksi tombol: ${label}`}
-        className="inline-flex items-center gap-1.5 rounded-pill border border-hairline bg-surface-soft px-3 py-1.5 text-caption font-sans text-muted opacity-80 max-w-[85%]"
+        className="inline-flex items-center gap-1.5 rounded-pill border border-hairline bg-surface-soft px-3 py-1.5 text-caption font-sans font-semibold text-muted shadow-subtle opacity-90 max-w-[85%]"
       >
         <span aria-hidden>{icon}</span>
         <span className="truncate">{label}</span>

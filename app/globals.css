@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Plus+Jakarta+Sans:wght@400;500;600;700&family=Silkscreen:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@400;500;600;700;800&family=Nunito:wght@400;500;600;700;800&family=Silkscreen:wght@400;700&family=JetBrains+Mono:wght@400;500&display=swap');
 
 @layer base {
   :root {
@@ -45,81 +45,81 @@
 }
 
 @layer components {
-  /* Primary CTA — Coral */
+  /* Primary CTA — playful pill */
   .btn-primary {
-    @apply rounded-md bg-primary px-5 py-3 text-button font-sans font-medium text-on-primary 
-           transition-all duration-200 hover:bg-primary-active active:bg-primary-active active:scale-[0.97]
-           disabled:bg-primary-disabled disabled:text-muted disabled:cursor-not-allowed;
+    @apply rounded-pill bg-primary px-5 py-3 text-button font-sans font-bold text-on-primary shadow-soft
+           transition-all duration-150 hover:bg-primary-active hover:-translate-y-0.5 active:bg-primary-active active:scale-95 active:translate-y-0
+           disabled:bg-primary-disabled disabled:text-muted disabled:shadow-none disabled:cursor-not-allowed disabled:translate-y-0;
   }
 
   /* Secondary — Cream with hairline */
   .btn-secondary {
-    @apply rounded-md border border-hairline bg-canvas px-5 py-3 text-button font-sans 
-           font-medium text-ink transition-all duration-200 hover:bg-surface-soft active:bg-surface-soft active:scale-[0.97];
+    @apply rounded-pill border border-hairline bg-canvas px-5 py-3 text-button font-sans 
+           font-bold text-ink transition-all duration-150 hover:bg-surface-soft hover:-translate-y-0.5 active:bg-surface-soft active:scale-95 active:translate-y-0;
   }
 
   /* Secondary on dark */
   .btn-secondary-dark {
-    @apply rounded-md bg-surface-dark-elevated px-5 py-3 text-button font-sans 
-           font-medium text-on-dark transition-all duration-200 hover:bg-surface-dark-soft active:scale-[0.97];
+    @apply rounded-pill bg-surface-dark-elevated px-5 py-3 text-button font-sans 
+           font-bold text-on-dark transition-all duration-150 hover:bg-surface-dark-soft hover:-translate-y-0.5 active:scale-95 active:translate-y-0;
   }
 
   /* Text link — coral inline */
   .text-link {
-    @apply text-primary font-medium hover:underline transition-colors;
+    @apply text-primary font-semibold hover:underline transition-colors;
   }
 
   /* Cards */
   .card {
-    @apply rounded-lg bg-surface-card p-xl-space transition-shadow duration-300;
+    @apply rounded-2xl bg-surface-card p-xl-space shadow-soft transition-all duration-200;
   }
 
   .card-dark {
-    @apply rounded-lg bg-surface-dark p-xl-space text-on-dark;
+    @apply rounded-2xl bg-surface-dark p-xl-space text-on-dark shadow-soft;
   }
 
   .card-cream {
-    @apply rounded-lg bg-canvas border border-hairline p-xl-space transition-shadow duration-300;
+    @apply rounded-2xl bg-canvas border border-hairline p-xl-space shadow-soft transition-all duration-200;
   }
 
   /* Badge pill */
   .badge {
     @apply inline-flex items-center rounded-pill bg-surface-card px-3 py-1 
-           text-caption font-sans font-medium text-ink;
+           text-caption font-sans font-semibold text-ink;
   }
 
   .badge-primary {
     @apply inline-flex items-center rounded-pill bg-primary px-3 py-1 
-           text-caption-upper font-sans font-medium text-on-primary uppercase tracking-wider;
+           text-caption-upper font-sans font-bold text-on-primary uppercase tracking-wider;
   }
 
   /* Category tab */
   .tab {
-    @apply rounded-md px-3.5 py-2 text-nav-link font-sans font-medium text-muted 
-           transition-all duration-200 cursor-pointer;
+    @apply rounded-pill px-3.5 py-2 text-nav-link font-sans font-semibold text-muted 
+           transition-all duration-150 cursor-pointer hover:text-ink hover:bg-surface-soft;
   }
 
   .tab-active {
-    @apply rounded-md px-3.5 py-2 text-nav-link font-sans font-medium text-ink 
-           bg-surface-card cursor-pointer;
+    @apply rounded-pill px-3.5 py-2 text-nav-link font-sans font-bold text-on-primary 
+           bg-primary shadow-soft cursor-pointer;
   }
 
   /* Input */
   .input {
-    @apply rounded-md border border-hairline bg-canvas px-3.5 py-2.5 text-body-md font-sans 
+    @apply rounded-lg border border-hairline bg-canvas px-4 py-2.5 text-body-md font-sans 
            text-ink placeholder:text-muted-soft
            focus:border-primary focus:outline-none focus:ring-[3px] focus:ring-primary/15
-           transition-all duration-200;
+           transition-all duration-150;
   }
 
   /* Callout coral card */
   .callout-coral {
-    @apply rounded-lg bg-primary p-xxl text-on-primary;
+    @apply rounded-2xl bg-primary p-xxl text-on-primary shadow-pop;
   }
 
   /* Code window */
   .code-window {
-    @apply rounded-lg bg-surface-dark p-lg-space font-mono text-code text-on-dark;
+    @apply rounded-2xl bg-surface-dark p-lg-space font-mono text-code text-on-dark;
   }
 
   /* Section spacing */

@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: 'BelajarBareng AI — Teman Belajar Personal',
   description:
     'Nggak ada lagi alasan nggak ngerti. Tanya aja ke BelajarBareng AI.',
+  robots: { index: false, follow: false },
 };
 
 const themeScript = `(function(){try{var t=localStorage.getItem('theme');if(t==='dark'||(!t&&window.matchMedia('(prefers-color-scheme:dark)').matches)){document.documentElement.classList.add('dark')}}catch(e){}})()`;

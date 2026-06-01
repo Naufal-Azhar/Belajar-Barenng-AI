@@ -2,7 +2,7 @@
 
 import { useReducer, useEffect, useCallback, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getDeviceId } from '@/lib/device-id';
+import { apiFetch } from '@/lib/api-fetch';
 import type { Session, Message, LearningMode } from '@/lib/types';
 
 type SessionStatus = 'no-session' | 'hydrating' | 'ready' | 'error';
@@ -78,24 +78,11 @@ function sessionReducer(state: SessionState, action: SessionAction): SessionStat
 }
 
 const ACTIVE_SESSION_KEY = 'belajar.activeSessionId';
-const LEGACY_SESSION_KEY = 'belajar.sessionId';
 
-/**
- * Migrasi legacy localStorage key: belajar.sessionId → belajar.activeSessionId.
- * Dijalankan sekali saat hook pertama mount; safe untuk dipanggil berulang.
- */
-function migrateLegacyStorageKey(): string | null {
+// Ephemeral: sessionStorage agar sesi aktif tidak ter-resume setelah tab ditutup.
+function readActiveSessionId(): string | null {
   if (typeof window === 'undefined') return null;
-  const newKey = localStorage.getItem(ACTIVE_SESSION_KEY);
-  if (newKey) return newKey;
-
-  const legacyKey = localStorage.getItem(LEGACY_SESSION_KEY);
-  if (legacyKey) {
-    localStorage.setItem(ACTIVE_SESSION_KEY, legacyKey);
-    localStorage.removeItem(LEGACY_SESSION_KEY);
-    return legacyKey;
-  }
-  return null;
+  return sessionStorage.getItem(ACTIVE_SESSION_KEY);
 }
 
 export function useSession() {
@@ -108,11 +95,11 @@ export function useSession() {
     error: null,
   });
 
-  // Resolve effective sessionId: query param > localStorage active > null
+  // Resolve effective sessionId: query param > sessionStorage active > null
   const queryParamSessionId = searchParams?.get('sessionId') ?? null;
   const effectiveSessionId = useMemo(() => {
     if (queryParamSessionId) return queryParamSessionId;
-    return typeof window !== 'undefined' ? migrateLegacyStorageKey() : null;
+    return typeof window !== 'undefined' ? readActiveSessionId() : null;
   }, [queryParamSessionId]);
 
   useEffect(() => {
@@ -125,15 +112,13 @@ export function useSession() {
 
     dispatch({ type: 'SET_HYDRATING' });
 
-    fetch(`/api/sessions/${effectiveSessionId}`, {
-      headers: { 'X-Device-Id': getDeviceId() },
-    })
+    apiFetch(`/api/sessions/${effectiveSessionId}`)
       .then((res) => {
         if (cancelled) return null;
         if (!res.ok) {
           // Session not found / forbidden — clear only if pakai localStorage source
           if (!queryParamSessionId) {
-            localStorage.removeItem(ACTIVE_SESSION_KEY);
+            sessionStorage.removeItem(ACTIVE_SESSION_KEY);
           }
           dispatch({ type: 'SET_NO_SESSION' });
           return null;
@@ -145,7 +130,7 @@ export function useSession() {
         if (data) {
           // Update localStorage active untuk auto-resume
           if (typeof window !== 'undefined') {
-            localStorage.setItem(ACTIVE_SESSION_KEY, data.session.sessionId);
+            sessionStorage.setItem(ACTIVE_SESSION_KEY, data.session.sessionId);
           }
           dispatch({ type: 'SET_READY', session: data.session, messages: data.messages });
         }
@@ -153,7 +138,7 @@ export function useSession() {
       .catch(() => {
         if (cancelled) return;
         if (!queryParamSessionId) {
-          localStorage.removeItem(ACTIVE_SESSION_KEY);
+          sessionStorage.removeItem(ACTIVE_SESSION_KEY);
         }
         dispatch({ type: 'SET_NO_SESSION' });
       });
@@ -166,12 +151,9 @@ export function useSession() {
 
   const createSession = useCallback(
     async () => {
-      const res = await fetch('/api/sessions', {
+      const res = await apiFetch('/api/sessions', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Device-Id': getDeviceId(),
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({}),
       });
 
@@ -180,7 +162,7 @@ export function useSession() {
       }
 
       const data = await res.json();
-      localStorage.setItem(ACTIVE_SESSION_KEY, data.sessionId);
+      sessionStorage.setItem(ACTIVE_SESSION_KEY, data.sessionId);
       dispatch({
         type: 'SET_READY',
         session: {
@@ -199,7 +181,7 @@ export function useSession() {
   );
 
   const clearSession = useCallback(() => {
-    localStorage.removeItem(ACTIVE_SESSION_KEY);
+    sessionStorage.removeItem(ACTIVE_SESSION_KEY);
     dispatch({ type: 'SET_NO_SESSION' });
   }, []);
 

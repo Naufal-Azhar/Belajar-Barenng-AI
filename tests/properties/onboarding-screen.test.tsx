@@ -7,10 +7,14 @@ import OnboardingScreen from '@/components/OnboardingScreen';
  * Verifikasi: headline + brand badge + CTA ter-render, dan klik CTA memanggil onStart.
  */
 describe('OnboardingScreen (Task 3)', () => {
-  it('render headline, brand badge, dan CTA', () => {
+  it('render headline, brand badge, highlight mode, dan CTA', () => {
     render(<OnboardingScreen onStart={vi.fn().mockResolvedValue(undefined)} />);
     expect(screen.getByText(/Belajar lebih/i)).toBeInTheDocument();
     expect(screen.getByText('BelajarBareng')).toBeInTheDocument();
+    expect(screen.getByText('Penjelas')).toBeInTheDocument();
+    expect(screen.getByText('Sokratik')).toBeInTheDocument();
+    expect(screen.getByText('Kuis')).toBeInTheDocument();
+    expect(screen.getByText('Latihan')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: /Mulai Belajar/i })).toBeInTheDocument();
   });
 

@@ -54,8 +54,9 @@ const config: Config = {
         error: '#c64545',
       },
       fontFamily: {
-        serif: ['Fraunces', 'Georgia', 'Times New Roman', 'serif'],
-        sans: ['Plus Jakarta Sans', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        serif: ['Baloo 2', 'Nunito', 'system-ui', 'sans-serif'],
+        sans: ['Nunito', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+        display: ['Baloo 2', 'Nunito', 'system-ui', 'sans-serif'],
         mono: ['JetBrains Mono', 'Fira Code', 'monospace'],
         pixel: ['Silkscreen', 'monospace'],
       },
@@ -76,11 +77,12 @@ const config: Config = {
         'nav-link': ['14px', { lineHeight: '1.4', fontWeight: '500' }],
       },
       borderRadius: {
-        xs: '4px',
-        sm: '6px',
-        md: '8px',
-        lg: '12px',
-        xl: '16px',
+        xs: '6px',
+        sm: '10px',
+        md: '14px',
+        lg: '18px',
+        xl: '24px',
+        '2xl': '30px',
         pill: '9999px',
       },
       spacing: {
@@ -95,11 +97,14 @@ const config: Config = {
       },
       boxShadow: {
         subtle: '0 1px 3px rgba(20,20,19,0.08)',
+        soft: '0 4px 16px -4px rgba(20,20,19,0.12)',
+        pop: '0 8px 24px -8px rgba(20,20,19,0.18)',
       },
       animation: {
         'fade-in': 'fade-in 0.5s ease-out',
         'slide-up': 'slide-up 0.5s ease-out',
         'float': 'float 6s ease-in-out infinite',
+        'pop-in': 'pop-in 0.22s cubic-bezier(0.34,1.56,0.64,1)',
       },
       keyframes: {
         'fade-in': {
@@ -113,6 +118,10 @@ const config: Config = {
         'float': {
           '0%, 100%': { transform: 'translateY(0px)' },
           '50%': { transform: 'translateY(-6px)' },
+        },
+        'pop-in': {
+          '0%': { opacity: '0', transform: 'scale(0.94)' },
+          '100%': { opacity: '1', transform: 'scale(1)' },
         },
       },
     },

@@ -66,3 +66,32 @@ export const pageTransition: Variants = {
     transition: { duration: 0.3 },
   },
 };
+
+// --- Balanced playful variants (transform/opacity only, ~150-250ms) ---
+
+// Light stagger container — snappier than containerVariants.
+export const popContainer: Variants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: { staggerChildren: 0.05, delayChildren: 0.04 },
+  },
+};
+
+// Soft pop entrance for cards/items.
+export const popIn: Variants = {
+  hidden: { opacity: 0, y: 12, scale: 0.98 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { type: 'spring', stiffness: 380, damping: 30, mass: 0.6 },
+  },
+};
+
+// Reusable hover/tap props for playful interactive elements.
+export const tapPop = {
+  whileHover: { scale: 1.03 },
+  whileTap: { scale: 0.96 },
+  transition: { type: 'spring', stiffness: 400, damping: 25 },
+} as const;

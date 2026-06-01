@@ -137,7 +137,7 @@ export default function ReviewPage() {
               <div className="text-4xl mb-3">📚</div>
               <p className="text-ink font-medium mb-2">Belum ada kartu untuk di-review</p>
               <p className="text-sm text-muted mb-4">Mulai belajar dulu, nanti kartu otomatis muncul di sini</p>
-              <button onClick={() => router.push('/')} className="px-4 py-2 bg-primary text-white rounded-lg text-sm">
+              <button onClick={() => router.push('/')} className="btn-primary">
                 Mulai Belajar
               </button>
             </motion.div>
@@ -151,8 +151,8 @@ export default function ReviewPage() {
               exit={{ opacity: 0, x: -30 }}
               className="w-full max-w-md"
             >
-              <div className="bg-surface rounded-xl p-6 shadow-subtle border border-hairline">
-                <span className="text-xs bg-primary/10 text-primary px-2 py-0.5 rounded mb-3 inline-block">
+              <div className="bg-surface-card rounded-2xl p-6 shadow-soft border border-hairline">
+                <span className="text-xs bg-primary/10 text-primary px-2.5 py-0.5 rounded-pill font-semibold mb-3 inline-block">
                   {currentCard.concept}
                 </span>
                 <p className="text-lg font-medium text-ink mb-6">{currentCard.question}</p>
@@ -166,7 +166,7 @@ export default function ReviewPage() {
                 <button
                   onClick={handleSubmit}
                   disabled={!userAnswer.trim() || grading}
-                  className="w-full mt-3 py-2.5 bg-primary text-white rounded-lg text-sm font-medium disabled:opacity-40"
+                  className="btn-primary w-full mt-3 disabled:opacity-40"
                 >
                   {grading ? 'Menilai...' : 'Kirim Jawaban'}
                 </button>
@@ -181,7 +181,7 @@ export default function ReviewPage() {
               animate={{ opacity: 1, scale: 1 }}
               className="w-full max-w-md"
             >
-              <div className="bg-surface rounded-xl p-6 shadow-subtle border border-hairline">
+              <div className="bg-surface-card rounded-2xl p-6 shadow-soft border border-hairline">
                 <div className="text-center mb-4">
                   <span className="text-3xl">{gradeEmoji(feedback.grade)}</span>
                   <p className="text-sm text-muted mt-1">
@@ -197,13 +197,13 @@ export default function ReviewPage() {
                 {crossMode && (
                   <button
                     onClick={handleCrossMode}
-                    className="w-full mb-3 py-2 border border-primary/30 text-primary rounded-lg text-sm hover:bg-primary/5"
+                    className="w-full mb-3 py-2 border border-primary/30 text-primary rounded-pill text-sm font-semibold hover:bg-primary/5 transition-colors"
                   >
                     🧠 Bedah pakai mode {crossMode.mode === 'socratic' ? 'Sokratik' : 'Latihan'}
                   </button>
                 )}
 
-                <button onClick={handleNext} className="w-full py-2.5 bg-primary text-white rounded-lg text-sm font-medium">
+                <button onClick={handleNext} className="btn-primary w-full">
                   {currentIdx + 1 >= cards.length ? 'Selesai' : 'Kartu Berikutnya →'}
                 </button>
               </div>
@@ -215,7 +215,7 @@ export default function ReviewPage() {
               <div className="text-5xl mb-3">🎉</div>
               <p className="text-xl font-semibold text-ink mb-2">Review Selesai!</p>
               <p className="text-sm text-muted mb-4">{cards.length} kartu telah di-review hari ini</p>
-              <button onClick={() => router.push('/')} className="px-6 py-2.5 bg-primary text-white rounded-lg text-sm font-medium">
+              <button onClick={() => router.push('/')} className="btn-primary">
                 Kembali ke Beranda
               </button>
             </motion.div>

@@ -44,4 +44,9 @@ describe('Dashboard (Task 4)', () => {
     render(<Dashboard sessions={[]} onNewSession={vi.fn()} />);
     expect(screen.getByText('Belum ada sesi belajar')).toBeInTheDocument();
   });
+
+  it('tidak menampilkan tombol login (Masuk / Daftar)', () => {
+    render(<Dashboard sessions={[makeSession()]} onNewSession={vi.fn()} />);
+    expect(screen.queryByText(/Masuk \/ Daftar/i)).toBeNull();
+  });
 });

@@ -107,7 +107,7 @@ export default function Sidebar({
         <button
           onClick={onNew}
           aria-label="Sesi baru"
-          className="w-full flex items-center justify-center gap-2 rounded-md border border-hairline px-3 py-2 text-sm font-sans font-medium text-ink hover:bg-surface transition-colors"
+          className="w-full flex items-center justify-center gap-2 rounded-pill border border-hairline bg-surface-soft px-3 py-2.5 text-sm font-sans font-bold text-ink shadow-subtle hover:bg-surface-card hover:-translate-y-0.5 active:scale-95 transition-all duration-150"
         >
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
             <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
@@ -183,7 +183,7 @@ export default function Sidebar({
               initial={{ x: -280 }}
               animate={{ x: 0 }}
               exit={{ x: -280 }}
-              transition={{ type: 'tween', duration: 0.2 }}
+              transition={{ type: 'spring', stiffness: 320, damping: 32 }}
               drag="x"
               dragConstraints={{ left: 0, right: 0 }}
               dragElastic={{ left: 0.4, right: 0 }}
@@ -215,7 +215,7 @@ export default function Sidebar({
               exit={{ opacity: 0, scale: 0.95 }}
               role="dialog"
               aria-labelledby="delete-confirm-title"
-              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90vw] max-w-sm bg-canvas border border-hairline rounded-lg shadow-subtle p-5"
+              className="fixed left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-50 w-[90vw] max-w-sm bg-canvas border border-hairline rounded-2xl shadow-pop p-5"
             >
               <h2 id="delete-confirm-title" className="text-body-md font-medium text-ink mb-2">
                 Hapus sesi ini?
@@ -226,13 +226,13 @@ export default function Sidebar({
               <div className="flex gap-2 justify-end">
                 <button
                   onClick={() => setDeletingId(null)}
-                  className="rounded-md border border-hairline px-3 py-1.5 text-caption font-sans text-muted hover:bg-surface transition-colors"
+                  className="rounded-pill border border-hairline px-3.5 py-1.5 text-caption font-sans font-semibold text-muted hover:bg-surface-soft transition-colors"
                 >
                   Batal
                 </button>
                 <button
                   onClick={confirmDelete}
-                  className="rounded-md bg-error/90 hover:bg-error text-white px-3 py-1.5 text-caption font-sans font-medium transition-colors"
+                  className="rounded-pill bg-error/90 hover:bg-error text-white px-3.5 py-1.5 text-caption font-sans font-semibold transition-colors"
                 >
                   Hapus
                 </button>
@@ -249,7 +249,7 @@ function SidebarSkeleton() {
   return (
     <div className="space-y-2 px-2 py-1">
       {[0, 1, 2].map((i) => (
-        <div key={i} className="h-9 bg-surface/60 rounded-md animate-pulse" />
+        <div key={i} className="h-9 bg-surface-soft/60 rounded-lg animate-pulse" />
       ))}
     </div>
   );
@@ -297,7 +297,7 @@ function SidebarItem({
           onKeyDown={onRenameKey}
           onBlur={onRenameBlur}
           maxLength={100}
-          className="w-full px-3 py-1.5 rounded-md text-body-sm text-ink bg-surface border border-primary/40 outline-none"
+          className="w-full px-3 py-2 rounded-lg text-body-sm text-ink bg-surface-soft border border-primary/40 outline-none"
         />
       ) : (
         <div
@@ -311,10 +311,10 @@ function SidebarItem({
               onSelect();
             }
           }}
-          className={`flex items-center justify-between gap-2 px-3 py-1.5 rounded-md cursor-pointer text-body-sm transition-colors ${
+          className={`flex items-center justify-between gap-2 px-3 py-2 rounded-lg cursor-pointer text-body-sm transition-all duration-150 ${
             isActive
-              ? 'bg-surface text-ink font-medium'
-              : 'text-muted hover:bg-surface/60 hover:text-ink'
+              ? 'bg-primary/12 text-ink font-bold'
+              : 'text-muted hover:bg-surface-soft hover:text-ink'
           }`}
         >
           <span className="truncate flex-1 flex items-center gap-1.5">
@@ -341,7 +341,7 @@ function SidebarItem({
             className="fixed inset-0 z-40"
             onClick={() => setMenuOpen(false)}
           />
-          <div className="absolute right-2 top-9 z-50 bg-canvas border border-hairline rounded-md shadow-subtle py-1 min-w-[120px]">
+          <div className="absolute right-2 top-9 z-50 bg-canvas border border-hairline rounded-xl shadow-pop py-1 min-w-[120px]">
             <button
               onClick={() => {
                 onStartRename();

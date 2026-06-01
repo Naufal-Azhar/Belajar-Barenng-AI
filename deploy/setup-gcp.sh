@@ -39,6 +39,7 @@ gcloud services enable \
   run.googleapis.com \
   cloudbuild.googleapis.com \
   artifactregistry.googleapis.com \
+  secretmanager.googleapis.com \
   --project="${PROJECT_ID}"
 
 # Create Artifact Registry repo
@@ -88,6 +89,16 @@ for ROLE in \
     --role="${ROLE}" \
     --quiet
 done
+
+# Create AUTH_SECRET (random) in Secret Manager if missing + grant accessor
+echo "🔑 Ensuring AUTH_SECRET secret..."
+if ! gcloud secrets describe auth-secret --project="${PROJECT_ID}" &>/dev/null; then
+  openssl rand -hex 32 | gcloud secrets create auth-secret --data-file=- --project="${PROJECT_ID}"
+fi
+gcloud secrets add-iam-policy-binding auth-secret \
+  --member="serviceAccount:${SA_EMAIL}" \
+  --role="roles/secretmanager.secretAccessor" \
+  --project="${PROJECT_ID}" --quiet
 
 # Create key for local dev
 echo "🔐 Creating service account key for local dev..."

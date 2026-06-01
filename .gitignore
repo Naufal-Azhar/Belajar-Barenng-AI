@@ -4,4 +4,5 @@ node_modules/
 .env.local
 tsconfig.tsbuildinfo
 .dev-sessions.json
+.dev-profiles.json
 service-account-key.json

@@ -11,6 +11,8 @@ import {
 } from '@/lib/validation';
 import { getSessionRepository } from '@/lib/session-repository';
 import { getLLMClient } from '@/lib/llm-client';
+import { isActive } from '@/lib/presence';
+import { verifyGate, GATE_COOKIE } from '@/lib/gate';
 import { buildSystemPrompt, BASE_TONE_GENERAL } from '@/lib/prompt-builder';
 import { createSseStream } from '@/lib/sse';
 import { isNonAcademic } from '@/lib/intent';
@@ -29,6 +31,15 @@ const MAX_MESSAGE_LENGTH = 4000;
 
 export async function POST(request: NextRequest) {
   try {
+    if (!verifyGate(request.cookies.get(GATE_COOKIE)?.value)) {
+      return Response.json({ error: 'Akses ditolak' }, { status: 401 });
+    }
+
+    const deviceId = request.headers.get('x-device-id')?.trim();
+    if (!deviceId || !isActive(deviceId)) {
+      return Response.json({ error: 'Kapasitas penuh, coba lagi nanti' }, { status: 503 });
+    }
+
     const body = await request.json();
     const parsed = chatBodySchema.safeParse(body);
 

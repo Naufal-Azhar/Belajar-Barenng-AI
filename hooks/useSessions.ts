@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { getDeviceId } from '@/lib/device-id';
+import { apiFetch } from '@/lib/api-fetch';
 import type { Session } from '@/lib/types';
 
 interface UseSessionsState {
@@ -39,9 +39,7 @@ export function useSessions(): UseSessionsResult {
     cancelledRef.current = false;
     setState((s) => ({ ...s, isLoading: true, error: null }));
     try {
-      const res = await fetch('/api/sessions', {
-        headers: { 'X-Device-Id': getDeviceId() },
-      });
+      const res = await apiFetch('/api/sessions');
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
       if (cancelledRef.current) return;
@@ -68,12 +66,9 @@ export function useSessions(): UseSessionsResult {
   }, [fetchList]);
 
   const createSession = useCallback(async (): Promise<Session> => {
-    const res = await fetch('/api/sessions', {
+    const res = await apiFetch('/api/sessions', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Device-Id': getDeviceId(),
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({}),
     });
     if (!res.ok) throw new Error('Gagal membuat sesi');
@@ -100,10 +95,7 @@ export function useSessions(): UseSessionsResult {
     });
 
     try {
-      const res = await fetch(`/api/sessions/${sessionId}`, {
-        method: 'DELETE',
-        headers: { 'X-Device-Id': getDeviceId() },
-      });
+      const res = await apiFetch(`/api/sessions/${sessionId}`, { method: 'DELETE' });
       if (!res.ok) throw new Error('Gagal menghapus');
     } catch (err) {
       // Revert optimistic update
@@ -129,12 +121,9 @@ export function useSessions(): UseSessionsResult {
     });
 
     try {
-      const res = await fetch(`/api/sessions/${sessionId}`, {
+      const res = await apiFetch(`/api/sessions/${sessionId}`, {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'X-Device-Id': getDeviceId(),
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ title }),
       });
       if (!res.ok) throw new Error('Gagal rename');

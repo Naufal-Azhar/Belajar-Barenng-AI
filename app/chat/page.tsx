@@ -12,6 +12,7 @@ import ErrorBanner from '@/components/ErrorBanner';
 import ExtractionModal from '@/components/ExtractionModal';
 import LayoutRouter from '@/components/layouts/LayoutRouter';
 import Sidebar from '@/components/Sidebar';
+import AccountMenu from '@/components/AccountMenu';
 import type { LearningMode, ExplainerSectionLabel } from '@/lib/types';
 
 /**
@@ -146,6 +147,7 @@ function ChatPageInner() {
           onDelete={handleDeleteSession}
           isOpenMobile={mobileSidebarOpen}
           onCloseMobile={() => setMobileSidebarOpen(false)}
+          loginSlot={<AccountMenu />}
         />
         <div className="flex-1 flex items-center justify-center">
           <motion.div
@@ -176,6 +178,7 @@ function ChatPageInner() {
           onDelete={handleDeleteSession}
           isOpenMobile={mobileSidebarOpen}
           onCloseMobile={() => setMobileSidebarOpen(false)}
+          loginSlot={<AccountMenu />}
         />
         <div className="flex-1 flex items-center justify-center">
           <div className="text-body-sm text-muted-soft animate-pulse">Memuat sesi...</div>
@@ -339,6 +342,7 @@ function ChatPageInner() {
         isOpenMobile={mobileSidebarOpen}
         onCloseMobile={() => setMobileSidebarOpen(false)}
         isCollapsedDesktop={sidebarCollapsed}
+        loginSlot={<AccountMenu />}
       />
 
       {/* Main column */}
@@ -386,7 +390,7 @@ function ChatPageInner() {
             whileTap={{ scale: 0.97 }}
             onClick={handleEndSession}
             disabled={endingSession || messages.length === 0}
-            className="rounded-md border border-hairline px-2 sm:px-3 py-1.5 text-caption font-sans font-medium text-muted hover:text-error hover:border-error/30 transition-colors disabled:opacity-40 disabled:pointer-events-none"
+            className="rounded-pill border border-hairline px-2 sm:px-3 py-1.5 text-caption font-sans font-semibold text-muted hover:text-error hover:border-error/30 transition-colors disabled:opacity-40 disabled:pointer-events-none"
           >
             {endingSession ? '...' : 'Akhiri'}
           </motion.button>
@@ -436,7 +440,7 @@ function ChatPageInner() {
             </span>
             <button
               onClick={() => router.push('/summary')}
-              className="rounded-md border border-success/30 px-3 py-1 text-success hover:bg-success/10 transition-colors text-caption font-medium"
+              className="rounded-pill border border-success/30 px-3 py-1 text-success hover:bg-success/10 transition-colors text-caption font-semibold"
             >
               Lihat Ringkasan
             </button>
